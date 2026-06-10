@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>La Polla Mundial 2026 - Colombia</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a2f1f 0%, #051f12 100%);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a4d2a 0%, #0e3d1f 100%);
+            border-radius: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f5e7a3, #d4af37);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .subtitle { color: #cce6d4; margin-top: 10px; }
+        .casa-card {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+        .casa-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; color: #d4af37; }
+        .casa-amount { font-size: 3rem; font-weight: 800; margin: 10px 0; color: #ffd700; }
+        .comision-info { font-size: 0.8rem; opacity: 0.8; }
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37, #b8922a);
+            border: none;
+            color: #0a2f1f;
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .card {
+            background: rgba(10, 30, 20, 0.85);
+            backdrop-filter: blur(5px);
+            border-radius: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        .card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #d4af37;
+            border-left: 4px solid #d4af37;
+            padding-left: 12px;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: #cce6d4; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            background: #1e3328;
+            color: white;
+            font-size: 1rem;
+        }
+        .marcador-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        .marcador-inputs input {
+            width: 70px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 30px;
+            border: none;
+            background: #1e3328;
+            color: white;
+        }
+        .vs { font-size: 1.2rem; font-weight: bold; color: #d4af37; }
+        button[type="submit"], .btn-jugar {
+            background: linear-gradient(135deg, #2a7f4a, #1e5a36);
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .ranking-list { list-style: none; }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(212,175,55,0.2);
+        }
+        .rank-number { font-weight: bold; width: 35px; color: #d4af37; }
+        .rank-name { flex: 1; margin-left: 10px; }
+        .rank-score {
+            font-weight: bold;
+            background: #1e3328;
+            padding: 4px 12px;
+            border-radius: 40px;
+            color: #ffd700;
+        }
+        .top1 .rank-score { background: linear-gradient(135deg, #d4af37, #f5e7a3); color: #0a2f1f; }
+        .partidos-grid, .solicitudes-list, .jugadores-list { max-height: 300px; overflow-y: auto; }
+        .partido-item, .solicitud-item, .jugador-item {
+            background: #0e2a1c;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 16px;
+            border-left: 3px solid #d4af37;
+        }
+        .fecha-partido { font-size: 0.7rem; color: #d4af37; }
+        .historial-list { max-height: 250px; overflow-y: auto; }
+        .historial-item {
+            background: #0e2a1c;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            border-left: 3px solid #d4af37;
+        }
+        .btn-liquidar {
+            background: linear-gradient(135deg, #8b0000, #5a0000);
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
+            color: white;
+        }
+        .btn-aprobar {
+            background: #2a7f4a;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .footer { text-align: center; margin-top: 30px; font-size: 0.7rem; opacity: 0.7; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #0a2f1f;
+            padding: 25px;
+            border-radius: 30px;
+            max-width: 90%;
+            width: 350px;
+            text-align: center;
+            border: 1px solid #d4af37;
+        }
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 30px;
+            border: none;
+            background: #1e3328;
+            color: white;
+        }
+        .close-modal {
+            background: #d4af37;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .winner-announce {
+            background: #d4af37;
+            color: #0a2f1f;
+            padding: 15px;
+            border-radius: 20px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .tab { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab button {
+            flex: 1;
+            padding: 10px;
+            background: #1e3328;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+        }
+        .tab button.active { background: #d4af37; color: #0a2f1f; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .badge-actualizado { background: #2a7f4a; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+        .admin-section {
+            background: #0e2a1c;
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+        }
+        .admin-only { display: none; }
+        .login-modal {
+            display: flex;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .login-box {
+            background: #0a2f1f;
+            padding: 30px;
+            border-radius: 30px;
+            text-align: center;
+            border: 2px solid #d4af37;
+            width: 300px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 30px;
+            border: none;
+            background: #1e3328;
+            color: white;
+            font-size: 1rem;
+        }
+        .btn-login {
+            background: #d4af37;
+            border: none;
+            padding: 12px;
+            border-radius: 30px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .error-login {
+            color: #ff6b6b;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        .admin-badge {
+            background: #8b0000;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Modal de Login para Administrador -->
+<div id="loginModal" class="login-modal">
+    <div class="login-box">
+        <h2 style="color:#d4af37;">🔐 ACCESO ADMINISTRADOR</h2>
+        <p style="margin: 10px 0;">Ingrese la contraseña para acceder al panel de administración</p>
+        <input type="password" id="adminPassword" placeholder="Contraseña">
+        <button class="btn-login" onclick="verificarAdmin()">INGRESAR</button>
+        <div id="errorLogin" class="error-login"></div>
+        <p style="margin-top: 15px; font-size:0.7rem;">Si no es administrador, ignore esta ventana y use la página normalmente.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">🏆 LA POLLA MUNDIAL 2026 🏆</div>
+        <div class="subtitle">🇨🇴 La polla más grande de Colombia | Acierte el marcador y gane parte de la CASA 🇨🇴</div>
+    </div>
+
+    <div class="casa-card">
+        <div class="casa-label">💰 LA CASA (POZO TOTAL) 💰</div>
+        <div class="casa-amount" id="casaDisplay">$ 0</div>
+        <div class="comision-info">🏢 La casa se queda con el 10% | 90% se reparte entre los que acierten</div>
+        <div class="comision-info" id="acumuladoDisplay" style="margin-top:5px;">📦 Acumulado sin ganadores: $ 0</div>
+        <button class="btn-primary" id="btnRecarga">➕ RECARGAR SALDO (Comprar jugadas)</button>
+    </div>
+
+    <div class="tab">
+        <button class="tab-btn active" data-tab="jugada">📝 HACER JUGADA</button>
+        <button class="tab-btn" data-tab="partidos">📅 PARTIDOS MUNDIAL 2026</button>
+        <button class="tab-btn admin-only" data-tab="admin" id="tabAdminBtn">⚙️ ADMINISTRADOR</button>
+    </div>
+
+    <!-- Tab 1: Hacer jugada -->
+    <div id="tab-jugada" class="tab-content active">
+        <div class="card">
+            <h2>📝 DATOS DEL JUGADOR</h2>
+            <div class="form-group">
+                <label>👤 Nombre completo</label>
+                <input type="text" id="nombreJugador" placeholder="Ej: Carlos Pérez">
+            </div>
+            <div class="form-group">
+                <label>📱 Número de teléfono (para pagos)</label>
+                <input type="tel" id="telefonoJugador" placeholder="Ej: 3001234567">
+            </div>
+            <div class="form-group">
+                <label>💳 Método de pago favorito</label>
+                <select id="metodoPago">
+                    <option value="Nequi">Nequi</option>
+                    <option value="Daviplata">Daviplata</option>
+                    <option value="Bancolombia">Bancolombia</option>
+                    <option value="Efecty">Efecty</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚽ SELECCIONE EL PARTIDO</h2>
+            <select id="partidoSelect" style="width:100%; padding:12px; border-radius:30px; background:#1e3328; color:white; margin-bottom:15px;">
+                <option value="">-- Seleccione un partido --</option>
+            </select>
+            
+            <h2>🎯 MARCADOR PRONÓSTICO</h2>
+            <div class="marcador-inputs">
+                <input type="number" id="golesLocal" placeholder="0" min="0" max="10" value="0">
+                <span class="vs">VS</span>
+                <input type="number" id="golesVisitante" placeholder="0" min="0" max="10" value="0">
+            </div>
+            
+            <div class="form-group" style="margin-top:15px;">
+                <label>💰 Valor de su jugada (COP) - Mínimo $10,000</label>
+                <input type="number" id="montoJugada" placeholder="Mínimo $10,000" min="10000" step="5000">
+            </div>
+            
+            <button id="btnJugar" class="btn-jugar">⚡ JUGAR AHORA</button>
+        </div>
+    </div>
+
+    <!-- Tab 2: Partidos del Mundial -->
+    <div id="tab-partidos" class="tab-content">
+        <div class="card">
+            <h2>📅 CALENDARIO MUNDIAL 2026 <span class="badge-actualizado">ACTUALIZADO EN VIVO</span></h2>
+            <div class="partidos-grid" id="listaPartidos">Cargando partidos...</div>
+        </div>
+    </div>
+
+    <!-- Tab 3: ADMINISTRADOR (Solo visible con contraseña) -->
+    <div id="tab-admin" class="tab-content">
+        <div class="card">
+            <h2>⚙️ PANEL DE ADMINISTRADOR <span class="admin-badge">MODO ADMIN</span></h2>
+            
+            <div class="admin-section">
+                <h3 style="color:#d4af37;">📋 SOLICITUDES PENDIENTES</h3>
+                <div id="solicitudesPendientes" class="solicitudes-list">Cargando...</div>
+            </div>
+            
+            <div class="admin-section">
+                <h3 style="color:#d4af37;">👥 LISTA DE JUGADORES</h3>
+                <div id="listaJugadores" class="jugadores-list">Cargando...</div>
+            </div>
+            
+            <div class="admin-section">
+                <h3 style="color:#d4af37;">🔧 ACTIVAR SALDO MANUAL</h3>
+                <select id="adminJugadorSelect" style="width:100%; padding:10px; border-radius:30px; background:#1e3328; color:white; margin-bottom:10px;">
+                    <option value="">-- Seleccione jugador --</option>
+                </select>
+                <input type="number" id="adminMontoActivar" placeholder="Monto a activar" style="width:100%; padding:10px; border-radius:30px; background:#1e3328; color:white; margin-bottom:10px;">
+                <button id="btnActivarSaldo" style="background:#2a7f4a; border:none; padding:12px; border-radius:40px; width:100%; color:white; font-weight:bold;">✅ ACTIVAR SALDO (YA VERIFIQUE EL PAGO)</button>
+            </div>
+            
+            <button id="btnLiquidarPartido" class="btn-liquidar">🔴 LIQUIDAR PARTIDO (SOLO ADMIN)</button>
+            <select id="liquidarPartidoSelect" style="width:100%; margin-top:10px; padding:10px; border-radius:30px; background:#1e3328; color:white;">
+                <option value="">-- Seleccione partido a liquidar --</option>
+            </select>
+            <div id="resultadoLiquidacion" style="margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🏅 RANKING DE JUGADORES</h2>
+        <ul class="ranking-list" id="rankingList"> <li style="text-align:center;">Cargando...</li> </ul>
+    </div>
+
+    <div class="card">
+        <h2>📜 MIS JUGADAS</h2>
+        <div id="historialContainer" class="historial-list">No hay jugadas registradas</div>
+        <button id="btnCobrarWhatsapp" class="btn-primary" style="width:100%; margin-top:15px;">📲 COBRAR MIS GANANCIAS POR WHATSAPP</button>
+    </div>
+
+    <div class="footer">
+        ⚡ La Polla Mundial 2026 | Mínimo por jugada: $10,000 COP | Si acierta, se reparte el 90% de la CASA
+    </div>
+</div>
+
+<!-- Modal Recarga -->
+<div id="modalRecarga" class="modal">
+    <div class="modal-content">
+        <h3>💰 SOLICITAR RECARGA</h3>
+        <p style="font-size:0.8rem; margin-bottom:15px;">
+            1. Consigne a: <strong id="numeroAdminDisplay">(configure)</strong><br>
+            2. Guarde el comprobante<br>
+            3. Complete el formulario
+        </p>
+        <input type="number" id="montoRecarga" placeholder="Monto (mínimo $10,000)">
+        <select id="metodoRecarga">
+            <option value="Nequi">💚 Nequi</option>
+            <option value="Daviplata">💙 Daviplata</option>
+            <option value="Bancolombia">🏦 Bancolombia</option>
+            <option value="Efecty">📄 Efecty</option>
+        </select>
+        <input type="text" id="comprobanteRecarga" placeholder="Número de transacción / comprobante">
+        <button id="btnSolicitarRecarga" style="background:#d4af37; border:none; padding:12px; border-radius:40px; margin-top:10px; width:100%; font-weight:bold;">📤 SOLICITAR RECARGA</button>
+        <button class="close-modal">❌ Cancelar</button>
+    </div>
+</div>
+
+<script>
+    // ==================== CONFIGURACIÓN DE SEGURIDAD ====================
+    // 🔐 CAMBIE ESTA CONTRASEÑA POR LA QUE USTED QUIERA
+    const ADMIN_PASSWORD = "admin123";
+    
+    let esAdmin = false;
+    
+    function verificarAdmin() {
+        const password = document.getElementById('adminPassword').value;
+        if (password === ADMIN_PASSWORD) {
+            esAdmin = true;
+            document.getElementById('loginModal').style.display = 'none';
+            mostrarPanelAdmin();
+            // Guardar sesión por 1 hora
+            localStorage.setItem('esAdmin', 'true');
+            localStorage.setItem('adminSessionTime', Date.now());
+        } else {
+            document.getElementById('errorLogin').innerText = '❌ Contraseña incorrecta';
+        }
+    }
+    
+    function mostrarPanelAdmin() {
+        // Mostrar todos los elementos con clase admin-only
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = 'block';
+        });
+        // Si es un botón de tab, mostrarlo
+        const tabAdminBtn = document.getElementById('tabAdminBtn');
+        if (tabAdminBtn) tabAdminBtn.style.display = 'block';
+        
+        // Recargar datos de admin
+        renderizarSolicitudesPendientes();
+        cargarListaJugadores();
+    }
+    
+    function verificarSesionAdmin() {
+        const session = localStorage.getItem('esAdmin');
+        const sessionTime = localStorage.getItem('adminSessionTime');
+        if (session === 'true' && sessionTime && (Date.now() - parseInt(sessionTime) < 3600000)) {
+            esAdmin = true;
+            document.getElementById('loginModal').style.display = 'none';
+            mostrarPanelAdmin();
+        }
+    }
+    
+    // ==================== PARTIDOS DEL MUNDIAL ====================
+    const PARTIDOS = [
+        { id: 1, fecha: "11/06/2026", grupo: "A", local: "🇺🇸 USA", visitante: "🇲🇽 México", fase: "Grupos" },
+        { id: 2, fecha: "12/06/2026", grupo: "A", local: "🇨🇦 Canadá", visitante: "🇵🇦 Panamá", fase: "Grupos" },
+        { id: 3, fecha: "16/06/2026", grupo: "A", local: "🇺🇸 USA", visitante: "🇨🇦 Canadá", fase: "Grupos" },
+        { id: 4, fecha: "17/06/2026", grupo: "A", local: "🇲🇽 México", visitante: "🇵🇦 Panamá", fase: "Grupos" },
+        { id: 5, fecha: "21/06/2026", grupo: "A", local: "🇵🇦 Panamá", visitante: "🇺🇸 USA", fase: "Grupos" },
+        { id: 6, fecha: "21/06/2026", grupo: "A", local: "🇲🇽 México", visitante: "🇨🇦 Canadá", fase: "Grupos" },
+        { id: 7, fecha: "11/06/2026", grupo: "B", local: "🇦🇷 Argentina", visitante: "🇨🇴 Colombia", fase: "Grupos" },
+        { id: 8, fecha: "12/06/2026", grupo: "B", local: "🇧🇷 Brasil", visitante: "🇵🇾 Paraguay", fase: "Grupos" },
+        { id: 9, fecha: "16/06/2026", grupo: "B", local: "🇦🇷 Argentina", visitante: "🇧🇷 Brasil", fase: "Grupos" },
+        { id: 10, fecha: "17/06/2026", grupo: "B", local: "🇨🇴 Colombia", visitante: "🇵🇾 Paraguay", fase: "Grupos" },
+        { id: 11, fecha: "21/06/2026", grupo: "B", local: "🇵🇾 Paraguay", visitante: "🇦🇷 Argentina", fase: "Grupos" },
+        { id: 12, fecha: "21/06/2026", grupo: "B", local: "🇨🇴 Colombia", visitante: "🇧🇷 Brasil", fase: "Grupos" },
+        { id: 13, fecha: "13/06/2026", grupo: "C", local: "🇫🇷 Francia", visitante: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra", fase: "Grupos" },
+        { id: 14, fecha: "14/06/2026", grupo: "C", local: "🇪🇸 España", visitante: "🇩🇪 Alemania", fase: "Grupos" },
+        { id: 15, fecha: "18/06/2026", grupo: "C", local: "🇫🇷 Francia", visitante: "🇪🇸 España", fase: "Grupos" },
+        { id: 16, fecha: "19/06/2026", grupo: "C", local: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra", visitante: "🇩🇪 Alemania", fase: "Grupos" },
+        { id: 17, fecha: "23/06/2026", grupo: "C", local: "🇩🇪 Alemania", visitante: "🇫🇷 Francia", fase: "Grupos" },
+        { id: 18, fecha: "23/06/2026", grupo: "C", local: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra", visitante: "🇪🇸 España", fase: "Grupos" },
+        { id: 19, fecha: "27/06/2026", grupo: "Octavos", local: "1A", visitante: "2B", fase: "Octavos" },
+        { id: 20, fecha: "28/06/2026", grupo: "Octavos", local: "1C", visitante: "2D", fase: "Octavos" },
+        { id: 21, fecha: "29/06/2026", grupo: "Octavos", local: "1B", visitante: "2A", fase: "Octavos" },
+        { id: 22, fecha: "30/06/2026", grupo: "Octavos", local: "1D", visitante: "2C", fase: "Octavos" },
+        { id: 23, fecha: "01/07/2026", grupo: "Octavos", local: "1E", visitante: "2F", fase: "Octavos" },
+        { id: 24, fecha: "02/07/2026", grupo: "Octavos", local: "1G", visitante: "2H", fase: "Octavos" },
+        { id: 25, fecha: "03/07/2026", grupo: "Octavos", local: "1F", visitante: "2E", fase: "Octavos" },
+        { id: 26, fecha: "04/07/2026", grupo: "Octavos", local: "1H", visitante: "2G", fase: "Octavos" },
+        { id: 27, fecha: "08/07/2026", grupo: "Cuartos", local: "W19", visitante: "W20", fase: "Cuartos" },
+        { id: 28, fecha: "09/07/2026", grupo: "Cuartos", local: "W21", visitante: "W22", fase: "Cuartos" },
+        { id: 29, fecha: "10/07/2026", grupo: "Cuartos", local: "W23", visitante: "W24", fase: "Cuartos" },
+        { id: 30, fecha: "11/07/2026", grupo: "Cuartos", local: "W25", visitante: "W26", fase: "Cuartos" },
+        { id: 31, fecha: "14/07/2026", grupo: "Semifinal", local: "W27", visitante: "W28", fase: "Semifinal" },
+        { id: 32, fecha: "15/07/2026", grupo: "Semifinal", local: "W29", visitante: "W30", fase: "Semifinal" },
+        { id: 33, fecha: "18/07/2026", grupo: "TercerLugar", local: "L31", visitante: "L32", fase: "Tercer Lugar" },
+        { id: 34, fecha: "19/07/2026", grupo: "Final", local: "W31", visitante: "W32", fase: "FINAL" }
+    ];
+
+    // IDs y datos iniciales
+    let jugadorId = localStorage.getItem('polla_user_id');
+    if (!jugadorId) {
+        jugadorId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        localStorage.setItem('polla_user_id', jugadorId);
+    }
+
+    let miSaldo = 0;
+    let misJugadas = [];
+    let datosJugador = { nombre: '', telefono: '', metodoPago: 'Nequi' };
+    let casaActual = 0;
+    let casaAcumulada = 0;
+    let resultadosPartidos = JSON.parse(localStorage.getItem('resultados_partidos') || '{}');
+    let solicitudesRecarga = JSON.parse(localStorage.getItem('solicitudes_recarga') || '[]');
+
+    function guardarTodo() {
+        localStorage.setItem(`saldo_${jugadorId}`, miSaldo);
+        localStorage.setItem(`jugadas_${jugadorId}`, JSON.stringify(misJugadas));
+        localStorage.setItem(`jugador_datos_${jugadorId}`, JSON.stringify(datosJugador));
+        localStorage.setItem('polla_casa_actual', casaActual);
+        localStorage.setItem('polla_casa_acumulada', casaAcumulada);
+        localStorage.setItem('resultados_partidos', JSON.stringify(resultadosPartidos));
+        localStorage.setItem('solicitudes_recarga', JSON.stringify(solicitudesRecarga));
+    }
+
+    function cargarDatos() {
+        miSaldo = parseInt(localStorage.getItem(`saldo_${jugadorId}`) || '0');
+        misJugadas = JSON.parse(localStorage.getItem(`jugadas_${jugadorId}`) || '[]');
+        const datos = localStorage.getItem(`jugador_datos_${jugadorId}`);
+        if (datos) datosJugador = JSON.parse(datos);
+        casaActual = parseInt(localStorage.getItem('polla_casa_actual') || '0');
+        casaAcumulada = parseInt(localStorage.getItem('polla_casa_acumulada') || '0');
+        
+        document.getElementById('nombreJugador').value = datosJugador.nombre;
+        document.getElementById('telefonoJugador').value = datosJugador.telefono;
+        document.getElementById('metodoPago').value = datosJugador.metodoPago;
+        
+        actualizarCasaDisplay();
+        renderizarHistorial();
+        renderizarRanking();
+        cargarPartidosEnSelects();
+        if (esAdmin) {
+            renderizarSolicitudesPendientes();
+            cargarListaJugadores();
+        }
+    }
+
+    function actualizarCasaDisplay() {
+        const total = casaActual + casaAcumulada;
+        document.getElementById('casaDisplay').innerHTML = `$ ${total.toLocaleString()}`;
+        document.getElementById('acumuladoDisplay').innerHTML = `📦 Acumulado sin ganadores: $ ${casaAcumulada.toLocaleString()}`;
+    }
+
+    function renderizarHistorial() {
+        const container = document.getElementById('historialContainer');
+        if (!misJugadas.length) {
+            container.innerHTML = '<div style="text-align:center;">No hay jugadas registradas</div>';
+            return;
+        }
+        let html = '';
+        [...misJugadas].reverse().forEach(j => {
+            let estadoTexto = j.estado === 'ganada' ? '✅ GANADA' : (j.estado === 'perdida' ? '❌ PERDIDA' : '⏳ PENDIENTE');
+            let gananciaTexto = j.gananciaReal ? ` | Ganó: $${j.gananciaReal.toLocaleString()}` : '';
+            html += `<div class="historial-item">
+                        <strong>${j.partidoNombre}</strong><br>
+                        Marcador: ${j.marcadorElegido} | Jugó: $${j.monto.toLocaleString()}<br>
+                        Estado: ${estadoTexto}${gananciaTexto}
+                    </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function obtenerRanking() {
+        return JSON.parse(localStorage.getItem('polla_ranking_global') || '[]');
+    }
+
+    function guardarRanking(ranking) {
+        localStorage.setItem('polla_ranking_global', JSON.stringify(ranking));
+    }
+
+    function renderizarRanking() {
+        let ranking = obtenerRanking();
+        let totalGanado = misJugadas.filter(j => j.estado === 'ganada').reduce((sum, j) => sum + (j.gananciaReal || 0), 0);
+        
+        const existe = ranking.find(u => u.id === jugadorId);
+        if (existe) {
+            existe.totalGanado = totalGanado;
+            existe.nombre = datosJugador.nombre || 'Jugador';
+            existe.telefono = datosJugador.telefono;
+        } else {
+            ranking.push({ id: jugadorId, nombre: datosJugador.nombre || 'Jugador', totalGanado: totalGanado, telefono: datosJugador.telefono });
+        }
+        
+        ranking.sort((a,b) => b.totalGanado - a.totalGanado);
+        guardarRanking(ranking);
+        
+        const container = document.getElementById('rankingList');
+        if (!ranking.length) {
+            container.innerHTML = '<li style="text-align:center;">Sin datos</li>';
+            return;
+        }
+        let html = '';
+        ranking.slice(0,20).forEach((user, idx) => {
+            let medalla = idx === 0 ? '🥇 ' : (idx === 1 ? '🥈 ' : (idx === 2 ? '🥉 ' : ''));
+            let clase = idx === 0 ? 'top1' : '';
+            html += `<li class="ranking-item ${clase}">
+                        <span class="rank-number">${idx+1}</span>
+                        <span class="rank-name">${medalla} ${user.nombre.substring(0,20)}</span>
+                        <span class="rank-score">$${(user.totalGanado || 0).toLocaleString()}</span>
+                    </li>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function cargarPartidosEnSelects() {
+        const selectPartido = document.getElementById('partidoSelect');
+        const selectLiquidar = document.getElementById('liquidarPartidoSelect');
+        selectPartido.innerHTML = '<option value="">-- Seleccione un partido --</option>';
+        if (selectLiquidar) selectLiquidar.innerHTML = '<option value="">-- Seleccione partido a liquidar --</option>';
+        
+        PARTIDOS.forEach(p => {
+            const liquidado = resultadosPartidos[p.id] ? '✅' : '⏳';
+            selectPartido.innerHTML += `<option value="${p.id}">${liquidado} ${p.fecha} | ${p.local} vs ${p.visitante} (${p.fase})</option>`;
+            if (selectLiquidar) selectLiquidar.innerHTML += `<option value="${p.id}">${p.fecha} | ${p.local} vs ${p.visitante} (${p.fase})</option>`;
+        });
+    }
+
+    function cargarListaPartidos() {
+        const container = document.getElementById('listaPartidos');
+        let html = '';
+        PARTIDOS.forEach(p => {
+            const res = resultadosPartidos[p.id];
+            let resultadoText = res ? `✅ ${res.golesLocal} - ${res.golesVisitante}` : '⏳ Pendiente';
+            html += `<div class="partido-item">
+                        <div class="fecha-partido">📅 ${p.fecha} | ${p.fase}</div>
+                        <strong>${p.local} vs ${p.visitante}</strong>
+                        <div style="font-size:0.8rem;">${resultadoText}</div>
+                    </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function renderizarSolicitudesPendientes() {
+        if (!esAdmin) return;
+        const container = document.getElementById('solicitudesPendientes');
+        if (!container) return;
+        const pendientes = solicitudesRecarga.filter(s => s.estado === 'pendiente');
+        if (!pendientes.length) {
+            container.innerHTML = '<div style="text-align:center;">✅ No hay solicitudes pendientes</div>';
+            return;
+        }
+        let html = '';
+        pendientes.forEach(s => {
+            html += `<div class="solicitud-item">
+                        <div><strong>👤 ${s.nombreJugador}</strong> | 📱 ${s.telefonoJugador}</div>
+                        <div>💰 $${s.monto.toLocaleString()} | 💳 ${s.metodo}</div>
+                        <div>📄 Comprobante: ${s.comprobante}</div>
+                        <div style="font-size:0.7rem;">🕐 ${new Date(s.fecha).toLocaleString()}</div>
+                        <button class="btn-aprobar" onclick="aprobarSolicitud(${s.id}, ${s.monto})">✅ APROBAR (YA LLEGÓ LA PLATA)</button>
+                    </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function cargarListaJugadores() {
+        if (!esAdmin) return;
+        const ranking = obtenerRanking();
+        const container = document.getElementById('listaJugadores');
+        const selectAdmin = document.getElementById('adminJugadorSelect');
+        
+        if (!container) return;
+        if (!ranking.length) {
+            container.innerHTML = '<div>No hay jugadores</div>';
+            return;
+        }
+        let html = '';
+        ranking.forEach(j => {
+            html += `<div class="jugador-item">
+                        <strong>${j.nombre}</strong> | 📱 ${j.telefono || 'No registrado'} | 🏆 $${(j.totalGanado || 0).toLocaleString()}
+                    </div>`;
+        });
+        container.innerHTML = html;
+        
+        if (selectAdmin) {
+            selectAdmin.innerHTML = '<option value="">-- Seleccione jugador --</option>';
+            ranking.forEach(j => {
+                selectAdmin.innerHTML += `<option value="${j.id}">${j.nombre} - ${j.telefono || 'sin teléfono'}</option>`;
+            });
+        }
+    }
+
+    function agregarSolicitud(monto, metodo, comprobante) {
+        solicitudesRecarga.push({
+            id: Date.now(),
+            jugadorId: jugadorId,
+            nombreJugador: datosJugador.nombre,
+            telefonoJugador: datosJugador.telefono,
+            monto: monto,
+            metodo: metodo,
+            comprobante: comprobante,
+            fecha: new Date().toISOString(),
+            estado: 'pendiente'
+        });
+        guardarTodo();
+        if (esAdmin) renderizarSolicitudesPendientes();
+    }
+
+    function agregarJugada(partidoId, golesLocal, golesVisitante, monto) {
+        if (monto < 10000) { alert('Monto mínimo: $10,000 COP'); return false; }
+        if (monto > miSaldo) { alert(`Saldo insuficiente. Su saldo: $${miSaldo.toLocaleString()}`); return false; }
+        
+        const partido = PARTIDOS.find(p => p.id == partidoId);
+        if (!partido) return false;
+        if (resultadosPartidos[partidoId]) { alert('Este partido ya fue liquidado'); return false; }
+        
+        miSaldo -= monto;
+        casaActual += monto;
+        
+        misJugadas.push({
+            id: Date.now(),
+            partidoId: partidoId,
+            partidoNombre: `${partido.local} vs ${partido.visitante}`,
+            equipoLocal: partido.local,
+            equipoVisitante: partido.visitante,
+            golesLocal: golesLocal,
+            golesVisitante: golesVisitante,
+            marcadorElegido: `${golesLocal} - ${golesVisitante}`,
+            monto: monto,
+            estado: 'pendiente',
+            fechaJugada: new Date().toISOString(),
+            nombreJugador: datosJugador.nombre
+        });
+        
+        guardarTodo();
+        actualizarCasaDisplay();
+        renderizarHistorial();
+        renderizarRanking();
+        alert(`✅ Jugada registrada: ${partido.local} ${golesLocal} - ${golesVisitante} ${partido.visitante} por $${monto.toLocaleString()}`);
+        return true;
+    }
+
+    function liquidarPartido(partidoId, golesLocalReal, golesVisitanteReal) {
+        const partido = PARTIDOS.find(p => p.id == partidoId);
+        if (!partido) return;
+        
+        resultadosPartidos[partidoId] = { golesLocal: golesLocalReal, golesVisitante: golesVisitanteReal };
+        
+        const jugadasPartido = misJugadas.filter(j => j.partidoId == partidoId && j.estado === 'pendiente');
+        const ganadores = jugadasPartido.filter(j => j.golesLocal === golesLocalReal && j.golesVisitante === golesVisitanteReal);
+        
+        const casaTotal = casaActual + casaAcumulada;
+        const casaGanadores = Math.floor(casaTotal * 0.9);
+        const comision = casaTotal - casaGanadores;
+        
+        if (ganadores.length === 0) {
+            casaAcumulada += casaActual;
+            casaActual = 0;
+            jugadasPartido.forEach(j => { j.estado = 'perdida'; });
+            alert(`❌ Nadie acertó. La casa de $${casaTotal.toLocaleString()} se acumula.`);
+        } else {
+            const gananciaPorJugador = Math.floor(casaGanadores / ganadores.length);
+            ganadores.forEach(g => {
+                g.estado = 'ganada';
+                g.gananciaReal = gananciaPorJugador;
+                if (g.nombreJugador === datosJugador.nombre) {
+                    miSaldo += gananciaPorJugador;
+                }
+            });
+            jugadasPartido.forEach(j => { if (!ganadores.includes(j)) j.estado = 'perdida'; });
+            casaActual = 0;
+            casaAcumulada = 0;
+            alert(`🎉 ${ganadores.length} ganador(es). Cada uno recibe: $${gananciaPorJugador.toLocaleString()}`);
+        }
+        
+        guardarTodo();
+        actualizarCasaDisplay();
+        renderizarHistorial();
+        renderizarRanking();
+        cargarPartidosEnSelects();
+        cargarListaPartidos();
+    }
+
+    function activarSaldoManual(jugadorIdSel, monto) {
+        if (!esAdmin) return;
+        if (!jugadorIdSel || monto < 10000) { alert('Seleccione jugador y monto mínimo $10,000'); return; }
+        let saldoActual = parseInt(localStorage.getItem(`saldo_${jugadorIdSel}`) || '0');
+        saldoActual += monto;
+        localStorage.setItem(`saldo_${jugadorIdSel}`, saldoActual);
+        if (jugadorIdSel === jugadorId) miSaldo = saldoActual;
+        alert(`✅ Saldo activado: $${monto.toLocaleString()}`);
+        renderizarRanking();
+    }
+
+    // Eventos
+    document.getElementById('btnJugar').onclick = () => {
+        const nombre = document.getElementById('nombreJugador').value.trim();
+        const telefono = document.getElementById('telefonoJugador').value.trim();
+        if (!nombre || !telefono) { alert('Complete sus datos primero'); return; }
+        datosJugador = { nombre, telefono, metodoPago: document.getElementById('metodoPago').value };
+        
+        const partidoId = document.getElementById('partidoSelect').value;
+        if (!partidoId) { alert('Seleccione un partido'); return; }
+        
+        const golesLocal = parseInt(document.getElementById('golesLocal').value) || 0;
+        const golesVisitante = parseInt(document.getElementById('golesVisitante').value) || 0;
+        const monto = parseInt(document.getElementById('montoJugada').value);
+        
+        if (isNaN(monto) || monto < 10000) { alert('Monto mínimo: $10,000 COP'); return; }
+        
+        agregarJugada(parseInt(partidoId), golesLocal, golesVisitante, monto);
+        document.getElementById('montoJugada').value = '';
+    };
+
+    const modal = document.getElementById('modalRecarga');
+    document.getElementById('btnRecarga').onclick = () => modal.style.display = 'flex';
+    document.querySelector('.close-modal').onclick = () => modal.style.display = 'none';
+    
+    document.getElementById('btnSolicitarRecarga').onclick = () => {
+        const monto = parseInt(document.getElementById('montoRecarga').value);
+        const metodo = document.getElementById('metodoRecarga').value;
+        const comprobante = document.getElementById('comprobanteRecarga').value.trim();
+        if (isNaN(monto) || monto < 10000) { alert('Monto mínimo: $10,000'); return; }
+        if (!comprobante) { alert('Ingrese el comprobante'); return; }
+        if (!datosJugador.nombre) { alert('Complete sus datos primero'); return; }
+        agregarSolicitud(monto, metodo, comprobante);
+        alert('Solicitud enviada. Espere aprobación.');
+        modal.style.display = 'none';
+        document.getElementById('montoRecarga').value = '';
+        document.getElementById('comprobanteRecarga').value = '';
+    };
+    
+    const btnActivarSaldo = document.getElementById('btnActivarSaldo');
+    if (btnActivarSaldo) {
+        btnActivarSaldo.onclick = () => {
+            if (!esAdmin) { alert('No tiene permisos de administrador'); return; }
+            const jugadorSel = document.getElementById('adminJugadorSelect').value;
+            const monto = parseInt(document.getElementById('adminMontoActivar').value);
+            if (!jugadorSel) { alert('Seleccione un jugador'); return; }
+            if (isNaN(monto) || monto < 10000) { alert('Monto mínimo: $10,000'); return; }
+            if (confirm(`¿Verificó que el jugador consignó $${monto.toLocaleString()}?`)) {
+                activarSaldoManual(jugadorSel, monto);
+                document.getElementById('adminMontoActivar').value = '';
+            }
+        };
+    }
+    
+    const btnLiquidar = document.getElementById('btnLiquidarPartido');
+    if (btnLiquidar) {
+        btnLiquidar.onclick = () => {
+            if (!esAdmin) { alert('No tiene permisos de administrador'); return; }
+            const partidoId = document.getElementById('liquidarPartidoSelect').value;
+            if (!partidoId) { alert('Seleccione un partido'); return; }
+            const partido = PARTIDOS.find(p => p.id == partidoId);
+            if (resultadosPartidos[partidoId]) { alert('Este partido ya fue liquidado'); return; }
+            const golesLocal = parseInt(prompt(`Goles de ${partido.local}:`, "2"));
+            const golesVisitante = parseInt(prompt(`Goles de ${partido.visitante}:`, "1"));
+            if (isNaN(golesLocal) || isNaN(golesVisitante)) return;
+            if (confirm(`¿Liquidar ${partido.local} vs ${partido.visitante} con ${golesLocal} - ${golesVisitante}?`)) {
+                liquidarPartido(parseInt(partidoId), golesLocal, golesVisitante);
+            }
+        };
+    }
+    
+    document.getElementById('btnCobrarWhatsapp').onclick = () => {
+        let totalGanado = misJugadas.filter(j => j.estado === 'ganada').reduce((sum, j) => sum + (j.gananciaReal || 0), 0);
+        if (totalGanado === 0) { alert('No tiene ganancias para cobrar'); return; }
+        const mensaje = `🏆 POLLA MUNDIAL 2026 🏆\n\nDATOS DEL GANADOR:\nNombre: ${datosJugador.nombre}\nTeléfono: ${datosJugador.telefono}\nMétodo de pago: ${datosJugador.metodoPago}\nID: ${jugadorId}\n\n💰 TOTAL A COBRAR: $${totalGanado.toLocaleString()} COP\n\nPor favor, realice el giro a mi ${datosJugador.metodoPago}.`;
+        window.open(`https://wa.me/573000000000?text=${encodeURIComponent(mensaje)}`, '_blank');
+    };
+    
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+            if (btn.dataset.tab === 'partidos') cargarListaPartidos();
+            if (btn.dataset.tab === 'admin' && esAdmin) {
+                renderizarSolicitudesPendientes();
+                cargarListaJugadores();
+            }
+        };
+    });
+    
+    // Configurar número del admin
+    let adminNumero = localStorage.getItem('admin_numero_pago');
+    if (!adminNumero) {
+        adminNumero = prompt("📱 CONFIGURACIÓN\nIngrese su número de Nequi o Daviplata:", "3000000000");
+        if (adminNumero) localStorage.setItem('admin_numero_pago', adminNumero);
+    }
+    const numeroDisplay = document.getElementById('numeroAdminDisplay');
+    if (numeroDisplay) numeroDisplay.innerText = adminNumero || "3000000000";
+    
+    // Funciones globales para admin
+    window.aprobarSolicitud = function(id, monto) {
+        if (!esAdmin) return;
+        const solicitud = solicitudesRecarga.find(s => s.id === id);
+        if (solicitud && solicitud.estado === 'pendiente') {
+            solicitud.estado = 'aprobada';
+            let saldoActual = parseInt(localStorage.getItem(`saldo_${solicitud.jugadorId}`) || '0');
+            saldoActual += monto;
+            localStorage.setItem(`saldo_${solicitud.jugadorId}`, saldoActual);
+            if (solicitud.jugadorId === jugadorId) miSaldo = saldoActual;
+            guardarTodo();
+            renderizarSolicitudesPendientes();
+            renderizarRanking();
+            alert(`✅ Recarga aprobada para ${solicitud.nombreJugador}`);
+        }
+    };
+    
+    // Inicializar
+    verificarSesionAdmin();
+    cargarDatos();
+    cargarListaPartidos();
+</script>
+</body>
+</html>
