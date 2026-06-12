@@ -3,288 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 Mundial 2026</title>
+    <title>Prueba - Mundial 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0a2a1a, #1a472a);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 600px; margin: 0 auto; }
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        h1 { color: #1a472a; text-align: center; margin-bottom: 20px; }
-        input, select, button {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        button {
-            background: #ffd700;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button:hover { background: #ffed4a; }
-        .saldo { font-size: 24px; font-weight: bold; color: #ffd700; }
-        .admin-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #1a472a;
-            color: #ffd700;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        body { font-family: Arial; padding: 20px; background: #1a472a; }
+        .card { background: white; border-radius: 15px; padding: 20px; max-width: 500px; margin: 0 auto; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; font-size: 16px; }
+        button { background: #ffd700; font-weight: bold; cursor: pointer; }
+        .resultado { background: #e8f5e9; padding: 10px; margin-top: 10px; border-radius: 8px; display: none; }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="card">
-        <h1>🏆 MUNDIAL 2026 🏆</h1>
-        <p>Cada apuesta: $5,000 | Pozo acumulativo</p>
-    </div>
-
-    <!-- REGISTRO -->
-    <div id="registroPanel" class="card">
-        <h2>📝 Registro</h2>
-        <input type="text" id="nombre" placeholder="Nombre">
-        <input type="text" id="celular" placeholder="Celular">
-        <button id="btnRegistrar">🎯 Registrarse</button>
-    </div>
-
-    <!-- PRINCIPAL (oculto al inicio) -->
-    <div id="mainPanel" style="display: none;">
-        <div class="card">
-            <h2>💰 MI SALDO</h2>
-            <div class="saldo" id="saldo">$0</div>
-            <button id="btnRecargar">➕ Recargar</button>
-        </div>
-
-        <div class="card">
-            <h2>⚽ PARTIDOS</h2>
-            <div id="listaPartidos"></div>
-        </div>
-
-        <div class="card">
-            <h2>📋 MIS APUESTAS</h2>
-            <div id="misApuestas"></div>
-        </div>
-    </div>
+<div class="card">
+    <h1>🏆 MUNDIAL 2026</h1>
+    
+    <h2>📝 Registro</h2>
+    <input type="text" id="nombre" placeholder="Nombre" value="prueba">
+    <input type="text" id="celular" placeholder="Celular" value="123456">
+    <button id="btnRegistrar">🎯 Registrarse</button>
+    
+    <div id="resultado" class="resultado"></div>
 </div>
 
-<div id="adminBtn" class="admin-btn">🔑</div>
-
 <script>
-    // ============ CONFIGURACIÓN ============
-    const URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
-    const KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';
+    console.log("✅ Script cargado correctamente");
     
-    const db = supabase.createClient(URL, KEY);
-    let usuarioActual = null;
+    // Configuración de Supabase
+    const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';
     
-    const partidos = [
-        { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: 'Jun 14 15:00' },
-        { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: 'Jun 14 18:00' },
-        { id: 3, local: 'Francia', visitante: 'España', fecha: 'Jun 15 12:00' },
-        { id: 4, local: 'Alemania', visitante: 'Inglaterra', fecha: 'Jun 15 16:00' }
-    ];
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("✅ Supabase inicializado");
     
-    // ============ REGISTRO ============
-    document.getElementById('btnRegistrar').onclick = async function() {
+    // Función de registro
+    async function registrarUsuario() {
+        console.log("🔵 Botón clickeado - Ejecutando registro...");
+        
         const nombre = document.getElementById('nombre').value;
         const celular = document.getElementById('celular').value;
+        const resultadoDiv = document.getElementById('resultado');
+        
+        resultadoDiv.style.display = 'block';
+        resultadoDiv.innerHTML = '🔄 Registrando...';
         
         if (!nombre || !celular) {
-            alert('Completa nombre y celular');
+            resultadoDiv.innerHTML = '❌ Completa nombre y celular';
             return;
         }
         
-        const id = Date.now().toString();
+        const usuarioId = Date.now().toString();
         
-        const { error } = await db.from('usuarios').insert({
-            id: id,
-            nombre: nombre,
-            celular: celular,
-            saldo: 0,
-            fecha_registro: new Date()
-        });
-        
+        try {
+            console.log("Intentando insertar en Supabase...");
+            
+            const { data, error } = await supabase
+                .from('usuarios')
+                .insert({
+                    id: usuarioId,
+                    nombre: nombre,
+                    celular: celular,
+                    saldo: 0,
+                    fecha_registro: new Date()
+                });
+            
+            if (error) {
+                console.error("Error de Supabase:", error);
+                resultadoDiv.innerHTML = '❌ Error: ' + error.message;
+                return;
+            }
+            
+            console.log("✅ Registro exitoso:", data);
+            resultadoDiv.innerHTML = '✅ ¡Registro exitoso! Bienvenido ' + nombre;
+            
+            // Guardar en localStorage
+            const usuario = { id: usuarioId, nombre: nombre, saldo: 0 };
+            localStorage.setItem('usuario', JSON.stringify(usuario));
+            
+            setTimeout(() => {
+                alert('✅ Registro exitoso! Ahora recarga la página para continuar.');
+            }, 500);
+            
+        } catch (err) {
+            console.error("Error:", err);
+            resultadoDiv.innerHTML = '❌ Error: ' + err.message;
+        }
+    }
+    
+    // Asignar evento al botón
+    const boton = document.getElementById('btnRegistrar');
+    if (boton) {
+        boton.onclick = registrarUsuario;
+        console.log("✅ Evento asignado al botón");
+    } else {
+        console.error("❌ No se encontró el botón");
+    }
+    
+    // Verificar la tabla en Supabase
+    async function verificarTabla() {
+        console.log("Verificando tabla usuarios...");
+        const { data, error } = await supabase.from('usuarios').select('count');
         if (error) {
-            alert('Error: ' + error.message);
-            return;
-        }
-        
-        usuarioActual = { id: id, nombre: nombre, saldo: 0 };
-        localStorage.setItem('user', JSON.stringify(usuarioActual));
-        
-        document.getElementById('registroPanel').style.display = 'none';
-        document.getElementById('mainPanel').style.display = 'block';
-        
-        document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo}`;
-        cargarPartidos();
-        cargarMisApuestas();
-        
-        alert(`✅ Bienvenido ${nombre}! Recarga $5,000 para apostar`);
-    };
-    
-    // ============ PARTIDOS ============
-    function cargarPartidos() {
-        const html = partidos.map(p => `
-            <div style="border-bottom:1px solid #ddd; margin-bottom:10px; padding-bottom:10px;">
-                <strong>${p.local} vs ${p.visitante}</strong><br>
-                <small>${p.fecha}</small>
-                <div style="display:flex; gap:10px; margin:10px 0;">
-                    <input type="number" id="golL_${p.id}" placeholder="${p.local}" style="width:80px;">
-                    <span>-</span>
-                    <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" style="width:80px;">
-                </div>
-                <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $5,000</button>
-            </div>
-        `).join('');
-        document.getElementById('listaPartidos').innerHTML = html;
-    }
-    
-    // ============ APOSTAR ============
-    window.apostar = async function(id, local, visitante) {
-        if (!usuarioActual) { alert('Regístrate primero'); return; }
-        
-        const golesL = parseInt(document.getElementById(`golL_${id}`).value);
-        const golesV = parseInt(document.getElementById(`golV_${id}`).value);
-        
-        if (isNaN(golesL) || isNaN(golesV)) { alert('Ingresa el marcador'); return; }
-        if (usuarioActual.saldo < 5000) { alert('Saldo insuficiente, recarga $5,000'); return; }
-        
-        // Restar saldo
-        const nuevoSaldo = usuarioActual.saldo - 5000;
-        await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuarioActual.id);
-        usuarioActual.saldo = nuevoSaldo;
-        document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo}`;
-        
-        // Guardar apuesta
-        await db.from('apuestas').insert({
-            id: Date.now().toString(),
-            usuario_id: usuarioActual.id,
-            nombre_usuario: usuarioActual.nombre,
-            partido: `${local} vs ${visitante}`,
-            marcador_local: golesL,
-            marcador_visitante: golesV,
-            monto: 5000,
-            estado: 'pendiente'
-        });
-        
-        alert('✅ Apuesta registrada!');
-        cargarMisApuestas();
-        
-        document.getElementById(`golL_${id}`).value = '';
-        document.getElementById(`golV_${id}`).value = '';
-    };
-    
-    // ============ MIS APUESTAS ============
-    async function cargarMisApuestas() {
-        if (!usuarioActual) return;
-        
-        const { data } = await db.from('apuestas').select('*').eq('usuario_id', usuarioActual.id).order('fecha_apuesta', { ascending: false });
-        
-        if (!data || data.length === 0) {
-            document.getElementById('misApuestas').innerHTML = '<p>Aún no has apostado</p>';
-            return;
-        }
-        
-        document.getElementById('misApuestas').innerHTML = data.map(a => `
-            <div style="border-bottom:1px solid #ddd; padding:8px 0;">
-                <strong>${a.partido}</strong><br>
-                Tu pronóstico: ${a.marcador_local}-${a.marcador_visitante} | $${a.monto}
-                <span style="float:right">${a.estado === 'pendiente' ? '⏳' : a.estado === 'ganada' ? '✅ Ganó' : '❌ Perdió'}</span>
-            </div>
-        `).join('');
-    }
-    
-    // ============ RECARGAS ============
-    document.getElementById('btnRecargar').onclick = function() {
-        const medio = prompt('Medio de pago:\n1. Nequi (llave: 0091030441)\n2. Bancolombia (26269998309)\n\nEscribe 1 o 2');
-        if (medio === '1') alert('🔑 Nequi: 0091030441\n\nDespués de consignar, confirma con el admin');
-        else if (medio === '2') alert('🏦 Bancolombia: 26269998309\n\nDespués de consignar, confirma con el admin');
-        else alert('Opción inválida');
-    };
-    
-    // ============ ADMIN ============
-    document.getElementById('adminBtn').onclick = function() {
-        const pass = prompt('Contraseña:');
-        if (pass === 'admin2026') {
-            const partido = prompt('ID del partido (1-4):\n1=Colombia-Argentina\n2=Brasil-Uruguay\n3=Francia-España\n4=Alemania-Inglaterra');
-            const gL = parseInt(prompt('Goles LOCAL:'));
-            const gV = parseInt(prompt('Goles VISITANTE:'));
-            if (partido && !isNaN(gL) && !isNaN(gV)) {
-                window.cerrarPartido(parseInt(partido), gL, gV);
-            }
+            console.error("Error al verificar tabla:", error);
         } else {
-            alert('Contraseña incorrecta');
+            console.log("✅ Tabla usuarios existe");
         }
-    };
+    }
     
-    // ============ CERRAR PARTIDO ============
-    window.cerrarPartido = async function(partidoId, golesL, golesV) {
-        const { data: apuestasPartido } = await db.from('apuestas').select('*').eq('partido_id', partidoId).eq('estado', 'pendiente');
-        
-        if (!apuestasPartido || apuestasPartido.length === 0) {
-            alert('No hay apuestas en este partido');
-            return;
-        }
-        
-        const ganadores = apuestasPartido.filter(a => a.marcador_local === golesL && a.marcador_visitante === golesV);
-        const pozoTotal = apuestasPartido.reduce((s, a) => s + a.monto, 0);
-        const premioGanador = ganadores.length > 0 ? Math.floor((pozoTotal * 0.9) / ganadores.length) : 0;
-        
-        // Pagar a ganadores
-        for (const g of ganadores) {
-            const { data: user } = await db.from('usuarios').select('saldo').eq('id', g.usuario_id).single();
-            await db.from('usuarios').update({ saldo: (user?.saldo || 0) + premioGanador }).eq('id', g.usuario_id);
-            await db.from('apuestas').update({ estado: 'ganada', ganancia: premioGanador }).eq('id', g.id);
-        }
-        
-        // Marcar perdedores
-        await db.from('apuestas').update({ estado: 'perdida' }).eq('partido_id', partidoId).neq('estado', 'ganada');
-        
-        alert(`✅ Resultado: ${golesL}-${golesV}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio: $${premioGanador.toLocaleString()}`);
-        
-        if (usuarioActual) {
-            const { data: updated } = await db.from('usuarios').select('saldo').eq('id', usuarioActual.id).single();
-            if (updated) {
-                usuarioActual.saldo = updated.saldo;
-                document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo}`;
-            }
-            cargarMisApuestas();
-        }
-    };
-    
-    // ============ VERIFICAR SESIÓN ============
-    window.onload = function() {
-        const guardado = localStorage.getItem('user');
-        if (guardado) {
-            usuarioActual = JSON.parse(guardado);
-            document.getElementById('registroPanel').style.display = 'none';
-            document.getElementById('mainPanel').style.display = 'block';
-            document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo}`;
-            cargarPartidos();
-            cargarMisApuestas();
-        }
-    };
+    verificarTabla();
 </script>
 </body>
 </html>
