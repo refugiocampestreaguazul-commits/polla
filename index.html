@@ -48,10 +48,9 @@
             color: #1a472a;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
             border: none;
         }
-        button:hover { transform: scale(1.02); background: #ffed4a; }
+        button:hover { background: #ffed4a; }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -85,15 +84,6 @@
             padding: 15px;
             border-left: 5px solid #ffd700;
             margin-bottom: 15px;
-        }
-        .fecha-hora {
-            background: #1a472a;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            display: inline-block;
-            font-size: 12px;
-            margin: 5px 0;
         }
         .marcador-inputs {
             display: flex;
@@ -139,9 +129,6 @@
             max-width: 400px;
             width: 90%;
         }
-        .btn-cerrar { background: #ccc !important; margin-top: 10px; }
-        
-        /* Botón Admin flotante */
         .admin-btn {
             position: fixed;
             bottom: 20px;
@@ -159,11 +146,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
         }
-        .admin-btn:hover { transform: scale(1.1); background: #2a5a3a; }
-        
-        /* Panel Admin */
         .admin-panel {
             position: fixed;
             bottom: 100px;
@@ -174,30 +157,12 @@
             padding: 20px;
             color: white;
             z-index: 1001;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
             display: none;
             border: 2px solid #ffd700;
         }
-        .admin-panel h3 {
-            color: #ffd700;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .admin-panel select, .admin-panel input {
-            margin: 5px 0;
-            background: white;
-        }
-        .admin-panel button {
-            background: #ffd700;
-            color: #1a472a;
-            margin-top: 10px;
-        }
-        .admin-panel .close-btn {
-            background: #ff4444;
-            color: white;
-            margin-top: 10px;
-        }
-        
+        .admin-panel h3 { color: #ffd700; margin-bottom: 15px; }
+        .admin-panel button { margin-top: 10px; }
+        .close-btn { background: #ff4444 !important; color: white !important; }
         @media (max-width: 768px) {
             .partidos-grid { grid-template-columns: 1fr; }
             .admin-panel { width: 90%; right: 5%; }
@@ -221,20 +186,18 @@
         <select id="medioPagoRegistro">
             <option value="nequi">Nequi</option>
             <option value="daviplata">Daviplata</option>
-            <option value="cuenta">Cuenta de ahorros</option>
+            <option value="cuenta">Bancolombia</option>
         </select>
         <button id="btnRegistrar">🎯 Registrarse (Saldo $0)</button>
-        <p style="margin-top: 10px; font-size: 12px; color: #666;">Al registrarte aceptas participar en un juego social entre amigos. Cada apuesta cuesta $5,000.</p>
+        <p style="margin-top: 10px; font-size: 12px; color: #666;">Al registrarte aceptas participar en un juego social entre amigos.</p>
     </div>
 
     <!-- Panel Principal -->
     <div id="panelPrincipal" style="display: none;">
-        <!-- SOLO POZO Y JUGADORES - SIN COMISIÓN -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div>💰 POZO TOTAL</div>
                 <div class="stat-number" id="pozoTotal">$0</div>
-                <small>Premio acumulado</small>
             </div>
             <div class="stat-card">
                 <div>👥 JUGADORES</div>
@@ -246,26 +209,22 @@
             </div>
         </div>
 
-        <!-- Saldo personal -->
         <div class="saldo-box">
             <div>💰 MI SALDO</div>
             <div class="stat-number" id="saldo">$0</div>
-            <button id="btnRecargar" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #ffd700; color: #1a472a;">➕ Recargar saldo (mín $5,000)</button>
+            <button id="btnRecargar" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #ffd700; color: #1a472a;">➕ Recargar</button>
         </div>
 
-        <!-- Ranking -->
         <div class="card">
-            <h2>🏆 RANKING DE GANADORES</h2>
+            <h2>🏆 RANKING</h2>
             <div id="ranking">Cargando...</div>
         </div>
 
-        <!-- Partidos -->
         <div class="card">
-            <h2>⚽ CALENDARIO OFICIAL FIFA 2026</h2>
+            <h2>⚽ PARTIDOS</h2>
             <div class="partidos-grid" id="partidosGrid"></div>
         </div>
 
-        <!-- Mis apuestas -->
         <div class="card">
             <h2>📋 MIS APUESTAS</h2>
             <div id="misApuestas"></div>
@@ -273,106 +232,98 @@
     </div>
 </div>
 
-<!-- Botón Admin (Llave) -->
+<!-- Botón Admin -->
 <div id="adminBtn" class="admin-btn">🔑</div>
 
-<!-- Panel Admin (oculto por defecto) -->
+<!-- Panel Admin -->
 <div id="adminPanel" class="admin-panel">
-    <h3>👑 PANEL ADMINISTRADOR</h3>
+    <h3>👑 ADMIN</h3>
     <select id="adminPartido">
-        <option value="1">🇨🇴 Colombia vs Argentina 🇦🇷</option>
-        <option value="2">🇧🇷 Brasil vs Uruguay 🇺🇾</option>
-        <option value="3">🇫🇷 Francia vs España 🇪🇸</option>
-        <option value="4">🇩🇪 Alemania vs Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿</option>
-        <option value="5">🇵🇹 Portugal vs Holanda 🇳🇱</option>
-        <option value="6">🇮🇹 Italia vs Bélgica 🇧🇪</option>
-        <option value="7">🇲🇽 México vs Estados Unidos 🇺🇸</option>
-        <option value="8">🇯🇵 Japón vs Corea del Sur 🇰🇷</option>
+        <option value="1">Colombia vs Argentina</option>
+        <option value="2">Brasil vs Uruguay</option>
+        <option value="3">Francia vs España</option>
+        <option value="4">Alemania vs Inglaterra</option>
+        <option value="5">Portugal vs Holanda</option>
+        <option value="6">Italia vs Bélgica</option>
+        <option value="7">México vs Estados Unidos</option>
+        <option value="8">Japón vs Corea del Sur</option>
     </select>
     <div style="display: flex; gap: 10px;">
-        <input type="number" id="adminGolL" placeholder="Goles Local" min="0" max="10">
-        <input type="number" id="adminGolV" placeholder="Goles Visitante" min="0" max="10">
+        <input type="number" id="adminGolL" placeholder="Local" min="0">
+        <input type="number" id="adminGolV" placeholder="Visitante" min="0">
     </div>
-    <button id="btnCerrarPartido">✅ CERRAR PARTIDO Y REPARTIR</button>
-    <button id="btnVerPozo">💰 VER POZO ACTUAL</button>
-    <button id="btnVerRecargas">📋 VER RECARGAS PENDIENTES</button>
-    <button id="btnCerrarAdmin" class="close-btn">❌ CERRAR PANEL</button>
+    <button id="btnCerrarPartido">✅ Cerrar Partido</button>
+    <button id="btnCerrarAdmin" class="close-btn">❌ Cerrar</button>
 </div>
 
-<!-- Modal de recarga -->
+<!-- Modal Recarga -->
 <div id="modalPago" class="modal">
     <div class="modal-content">
         <h3>💰 Recargar saldo</h3>
         <select id="medioPago">
             <option value="nequi">Nequi</option>
-            <option value="daviplata">Daviplata</option>
             <option value="cuenta">Bancolombia</option>
         </select>
-        <input type="number" id="montoRecarga" placeholder="Monto a recargar (mín $5,000)" min="5000" step="5000">
-        <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: left;">
-            <p><strong>📱 Datos para consignar:</strong></p>
+        <input type="number" id="montoRecarga" placeholder="Monto mínimo $5,000" min="5000">
+        <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0;">
             <p id="datosPago"></p>
-            <p style="font-size: 11px;">* Después de consignar, confirma y el admin acreditará tu saldo</p>
         </div>
-        <button id="btnSolicitarRecarga">✅ Solicitar recarga</button>
-        <button id="btnCerrarModal" class="btn-cerrar">❌ Cancelar</button>
+        <button id="btnSolicitarRecarga">✅ Solicitar</button>
+        <button id="btnCerrarModal" class="close-btn">❌ Cancelar</button>
     </div>
 </div>
 
 <script>
-    (function() {
-        // ============ CONFIGURACIÓN - ¡PON TUS DATOS DE SUPABASE! ============
-        const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';  // <-- PON TU CLAVE
+    // ============ CONFIGURACIÓN ============
+    const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';
+    const ADMIN_PASSWORD = 'admin2026';
+    const COSTO_APUESTA = 5000;
+    
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let usuarioActual = null;
+    
+    // Lista de partidos por si no hay en BD
+    const partidosLocal = [
+        { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A' },
+        { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A' },
+        { id: 3, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B' },
+        { id: 4, local: 'Alemania', visitante: 'Inglaterra', fecha: '2026-06-15', hora: '16:00', grupo: 'Grupo B' },
+        { id: 5, local: 'Portugal', visitante: 'Holanda', fecha: '2026-06-16', hora: '12:00', grupo: 'Grupo C' },
+        { id: 6, local: 'Italia', visitante: 'Bélgica', fecha: '2026-06-16', hora: '18:00', grupo: 'Grupo C' },
+        { id: 7, local: 'México', visitante: 'Estados Unidos', fecha: '2026-06-17', hora: '15:00', grupo: 'Grupo D' },
+        { id: 8, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D' }
+    ];
+    
+    // ============ REGISTRO ============
+    async function registrar() {
+        const nombre = document.getElementById('nombre').value;
+        const email = document.getElementById('email').value;
+        const celular = document.getElementById('celular').value;
+        const medioPago = document.getElementById('medioPagoRegistro').value;
         
-        const COSTO_APUESTA = 5000;
-        const ADMIN_PASSWORD = 'colombia2026';  // Cambia esta contraseña
+        if (!nombre || !celular) {
+            alert('❌ Completa nombre y celular');
+            return;
+        }
         
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const usuarioId = Date.now().toString();
         
-        let usuarioActual = null;
-        let partidos = [];
-        
-        // ============ CALENDARIO ============
-        const calendarioOficial = [
-            { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A' },
-            { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A' },
-            { id: 3, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B' },
-            { id: 4, local: 'Alemania', visitante: 'Inglaterra', fecha: '2026-06-15', hora: '16:00', grupo: 'Grupo B' },
-            { id: 5, local: 'Portugal', visitante: 'Holanda', fecha: '2026-06-16', hora: '12:00', grupo: 'Grupo C' },
-            { id: 6, local: 'Italia', visitante: 'Bélgica', fecha: '2026-06-16', hora: '16:00', grupo: 'Grupo C' },
-            { id: 7, local: 'México', visitante: 'Estados Unidos', fecha: '2026-06-17', hora: '14:00', grupo: 'Grupo D' },
-            { id: 8, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D' }
-        ];
-        
-        // ============ REGISTRO ============
-        async function registrar() {
-            const nombre = document.getElementById('nombre').value;
-            const email = document.getElementById('email').value;
-            const celular = document.getElementById('celular').value;
-            const medioPago = document.getElementById('medioPagoRegistro').value;
-            
-            if (!nombre || !celular) {
-                alert('❌ Por favor completa nombre y celular');
-                return;
-            }
-            
-            const usuarioId = Date.now().toString();
-            
-            const { error } = await _supabase
+        try {
+            const { error } = await supabase
                 .from('usuarios')
-                .insert([{
+                .insert({
                     id: usuarioId,
                     nombre: nombre,
                     email: email,
                     celular: celular,
                     saldo: 0,
                     medio_pago: medioPago,
-                    fecha_registro: new Date()
-                }]);
+                    fecha_registro: new Date().toISOString()
+                });
             
             if (error) {
-                alert('⚠️ Error: ' + error.message);
+                alert('Error: ' + error.message);
                 return;
             }
             
@@ -387,268 +338,168 @@
             cargarPartidos();
             cargarMisApuestas();
             
-            alert(`✅ ¡Bienvenido ${nombre}!\n💰 Saldo inicial: $0\n🎯 Recarga mínimo $5,000 para apostar.`);
-        }
-        
-        // ============ DATOS GLOBALES (SIN COMISIÓN) ============
-        async function cargarDatos() {
-            const { data: apuestas } = await _supabase.from('apuestas').select('monto');
-            const totalPozo = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
-            document.getElementById('pozoTotal').innerHTML = `$${totalPozo.toLocaleString()}`;
+            alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
             
-            const { count: jugadores } = await _supabase.from('usuarios').select('*', { count: 'exact', head: true });
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    }
+    
+    async function cargarDatos() {
+        try {
+            const { data: apuestas } = await supabase.from('apuestas').select('monto');
+            const total = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
+            document.getElementById('pozoTotal').innerHTML = `$${total.toLocaleString()}`;
+            
+            const { count: jugadores } = await supabase.from('usuarios').select('*', { count: 'exact', head: true });
             document.getElementById('totalJugadores').innerText = jugadores || 0;
             document.getElementById('totalApuestas').innerText = apuestas?.length || 0;
+        } catch (e) { console.log(e); }
+    }
+    
+    async function cargarPartidos() {
+        try {
+            let partidos = partidosLocal;
             
-            // Ranking
-            const { data: ganadores } = await _supabase.from('apuestas').select('nombre_usuario, ganancia_recibida').eq('estado', 'ganada');
-            const rankingMap = new Map();
-            ganadores?.forEach(g => rankingMap.set(g.nombre_usuario, (rankingMap.get(g.nombre_usuario) || 0) + (g.ganancia_recibida || 0)));
-            const ranking = Array.from(rankingMap.entries()).sort((a,b) => b[1] - a[1]).slice(0,10);
-            
-            const rankingDiv = document.getElementById('ranking');
-            if (ranking.length === 0) rankingDiv.innerHTML = '<p>Aún no hay ganadores</p>';
-            else rankingDiv.innerHTML = ranking.map((r,i) => `<div class="ranking-item"><span>${i+1}. ${r[0]}</span><span>💰 $${r[1].toLocaleString()}</span></div>`).join('');
-        }
-        
-        // ============ PARTIDOS ============
-        async function cargarPartidos() {
-            const { data } = await _supabase.from('partidos').select('*');
-            partidos = (data && data.length > 0) ? data : calendarioOficial;
+            // Intentar cargar desde BD
+            const { data } = await supabase.from('partidos').select('*');
+            if (data && data.length > 0) {
+                partidos = data;
+            }
             
             document.getElementById('partidosGrid').innerHTML = partidos.map(p => `
                 <div class="partido-card">
-                    <div><strong>🏆 ${p.local} vs ${p.visitante}</strong></div>
-                    <div class="fecha-hora">📅 ${p.fecha} | 🕐 ${p.hora} (Hora Colombia)</div>
-                    <div style="font-size: 12px; color: #666;">${p.grupo}</div>
+                    <strong>🏆 ${p.local} vs ${p.visitante}</strong><br>
+                    <small>📅 ${p.fecha} | 🕐 ${p.hora || '15:00'} ${p.grupo ? '| ' + p.grupo : ''}</small>
                     <div class="marcador-inputs">
                         <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10">
                         <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10">
                     </div>
-                    <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>
+                    <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA}</button>
                 </div>
             `).join('');
-        }
+        } catch (e) { console.log(e); }
+    }
+    
+    window.apostar = async function(id, local, visitante) {
+        if (!usuarioActual) { alert('Regístrate primero'); return; }
         
-        // ============ APOSTAR ============
-        window.apostar = async function(id, local, visitante) {
-            if (!usuarioActual) { alert('Regístrate primero'); return; }
-            
-            const golesL = parseInt(document.getElementById(`golL_${id}`).value);
-            const golesV = parseInt(document.getElementById(`golV_${id}`).value);
-            
-            if (isNaN(golesL) || isNaN(golesV)) { alert('Ingresa el marcador'); return; }
-            if (usuarioActual.saldo < COSTO_APUESTA) { alert('Saldo insuficiente. Recarga mínimo $5,000'); return; }
-            
-            const nuevoSaldo = usuarioActual.saldo - COSTO_APUESTA;
-            await _supabase.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuarioActual.id);
-            usuarioActual.saldo = nuevoSaldo;
-            
-            await _supabase.from('apuestas').insert([{
-                id: Date.now().toString(),
-                usuario_id: usuarioActual.id,
-                nombre_usuario: usuarioActual.nombre,
-                partido: `${local} vs ${visitante}`,
-                partido_id: id,
-                marcador_local: golesL,
-                marcador_visitante: golesV,
-                monto: COSTO_APUESTA,
-                estado: 'pendiente',
-                fecha_apuesta: new Date()
-            }]);
-            
+        const golesL = parseInt(document.getElementById(`golL_${id}`).value);
+        const golesV = parseInt(document.getElementById(`golV_${id}`).value);
+        
+        if (isNaN(golesL) || isNaN(golesV)) { alert('Ingresa el marcador'); return; }
+        if (usuarioActual.saldo < COSTO_APUESTA) { alert('Saldo insuficiente'); return; }
+        
+        const nuevoSaldo = usuarioActual.saldo - COSTO_APUESTA;
+        await supabase.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuarioActual.id);
+        usuarioActual.saldo = nuevoSaldo;
+        
+        await supabase.from('apuestas').insert({
+            id: Date.now().toString(),
+            usuario_id: usuarioActual.id,
+            nombre_usuario: usuarioActual.nombre,
+            partido: `${local} vs ${visitante}`,
+            partido_id: id,
+            marcador_local: golesL,
+            marcador_visitante: golesV,
+            monto: COSTO_APUESTA,
+            estado: 'pendiente',
+            fecha_apuesta: new Date().toISOString()
+        });
+        
+        actualizarSaldo();
+        cargarMisApuestas();
+        cargarDatos();
+        alert('✅ Apuesta registrada!');
+        
+        document.getElementById(`golL_${id}`).value = '';
+        document.getElementById(`golV_${id}`).value = '';
+    };
+    
+    async function cargarMisApuestas() {
+        if (!usuarioActual) return;
+        const { data } = await supabase.from('apuestas').select('*').eq('usuario_id', usuarioActual.id).order('fecha_apuesta', { ascending: false });
+        const container = document.getElementById('misApuestas');
+        if (!data || data.length === 0) { container.innerHTML = '<p>Aún no has apostado</p>'; return; }
+        container.innerHTML = data.map(a => `<div class="apuesta-item"><div><strong>${a.partido}</strong><br>${a.marcador_local}-${a.marcador_visitante} | $${a.monto}</div><div>${a.estado === 'pendiente' ? '⏳' : a.estado === 'ganada' ? '✅' : '❌'}</div></div>`).join('');
+    }
+    
+    window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
+        const { data: apuestasPartido } = await supabase.from('apuestas').select('*').eq('partido_id', partidoId).eq('estado', 'pendiente');
+        if (!apuestasPartido || apuestasPartido.length === 0) { alert('No hay apuestas'); return; }
+        
+        const ganadores = apuestasPartido.filter(a => a.marcador_local === resultadoLocal && a.marcador_visitante === resultadoVisitante);
+        const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
+        const pozoGanadores = Math.floor(pozoPartido * 0.9);
+        const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoGanadores / ganadores.length) : 0;
+        
+        for (const ganador of ganadores) {
+            const { data: usuario } = await supabase.from('usuarios').select('saldo').eq('id', ganador.usuario_id).single();
+            await supabase.from('usuarios').update({ saldo: (usuario?.saldo || 0) + premioPorGanador }).eq('id', ganador.usuario_id);
+            await supabase.from('apuestas').update({ estado: 'ganada', ganancia: premioPorGanador }).eq('id', ganador.id);
+        }
+        await supabase.from('apuestas').update({ estado: 'perdida' }).eq('partido_id', partidoId).neq('estado', 'ganada');
+        
+        alert(`✅ Partido ${resultadoLocal}-${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio: $${premioPorGanador.toLocaleString()}`);
+        if (usuarioActual) await cargarMisApuestas();
+        await cargarDatos();
+    };
+    
+    function mostrarModalPago() {
+        const medio = document.getElementById('medioPago').value;
+        document.getElementById('datosPago').innerHTML = medio === 'nequi' ? '🔑 Nequi: 0091030441' : '🏦 Bancolombia: 26269998309';
+        document.getElementById('modalPago').style.display = 'flex';
+    }
+    
+    async function solicitarRecarga() {
+        const monto = parseInt(document.getElementById('montoRecarga').value);
+        if (!monto || monto < 5000) { alert('Mínimo $5,000'); return; }
+        await supabase.from('recargas').insert({ id: Date.now().toString(), usuario_id: usuarioActual.id, monto: monto, medio_pago: document.getElementById('medioPago').value, estado: 'verificando' });
+        alert('✅ Solicitud enviada');
+        cerrarModal();
+    }
+    
+    function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
+    function actualizarSaldo() { document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo.toLocaleString()}`; }
+    
+    function abrirAdmin() {
+        const pass = prompt('Contraseña:');
+        if (pass === ADMIN_PASSWORD) {
+            document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('adminBtn').style.display = 'none';
+        }
+    }
+    
+    // Eventos
+    document.getElementById('adminBtn').onclick = abrirAdmin;
+    document.getElementById('btnCerrarAdmin').onclick = () => {
+        document.getElementById('adminPanel').style.display = 'none';
+        document.getElementById('adminBtn').style.display = 'flex';
+    };
+    document.getElementById('btnCerrarPartido').onclick = () => {
+        const id = parseInt(document.getElementById('adminPartido').value);
+        const gL = parseInt(document.getElementById('adminGolL').value);
+        const gV = parseInt(document.getElementById('adminGolV').value);
+        if (isNaN(gL) || isNaN(gV)) alert('Ingresa el resultado');
+        else window.cerrarPartido(id, gL, gV);
+    };
+    document.getElementById('btnRegistrar').onclick = registrar;
+    document.getElementById('btnRecargar').onclick = mostrarModalPago;
+    document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
+    document.getElementById('btnCerrarModal').onclick = cerrarModal;
+    
+    window.onload = function() {
+        const guardado = localStorage.getItem('usuario');
+        if (guardado) {
+            usuarioActual = JSON.parse(guardado);
+            document.getElementById('panelRegistro').style.display = 'none';
+            document.getElementById('panelPrincipal').style.display = 'block';
             actualizarSaldo();
-            cargarMisApuestas();
             cargarDatos();
-            alert('✅ Apuesta registrada!');
-            
-            document.getElementById(`golL_${id}`).value = '';
-            document.getElementById(`golV_${id}`).value = '';
-        };
-        
-        // ============ FUNCIÓN ADMIN: CERRAR PARTIDO ============
-        window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
-            console.log(`🔧 Cerrando partido ID ${partidoId} - Resultado: ${resultadoLocal}-${resultadoVisitante}`);
-            
-            const { data: apuestasPartido } = await _supabase
-                .from('apuestas')
-                .select('*')
-                .eq('partido_id', partidoId)
-                .eq('estado', 'pendiente');
-            
-            if (!apuestasPartido || apuestasPartido.length === 0) {
-                alert('No hay apuestas pendientes para este partido');
-                return;
-            }
-            
-            const ganadores = apuestasPartido.filter(a => 
-                a.marcador_local === resultadoLocal && 
-                a.marcador_visitante === resultadoVisitante
-            );
-            
-            const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
-            const pozoGanadores = Math.floor(pozoPartido * 0.9); // 90% para ganadores
-            const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoGanadores / ganadores.length) : 0;
-            
-            // Actualizar ganadores
-            for (const ganador of ganadores) {
-                const { data: usuario } = await _supabase
-                    .from('usuarios')
-                    .select('saldo')
-                    .eq('id', ganador.usuario_id)
-                    .single();
-                
-                const nuevoSaldo = (usuario?.saldo || 0) + premioPorGanador;
-                await _supabase
-                    .from('usuarios')
-                    .update({ saldo: nuevoSaldo, total_ganado: _supabase.sql`total_ganado + ${premioPorGanador}` })
-                    .eq('id', ganador.usuario_id);
-                
-                await _supabase
-                    .from('apuestas')
-                    .update({ 
-                        estado: 'ganada', 
-                        ganancia_recibida: premioPorGanador,
-                        resultado_real_local: resultadoLocal,
-                        resultado_real_visitante: resultadoVisitante
-                    })
-                    .eq('id', ganador.id);
-            }
-            
-            // Marcar perdedores
-            await _supabase
-                .from('apuestas')
-                .update({ 
-                    estado: 'perdida',
-                    resultado_real_local: resultadoLocal,
-                    resultado_real_visitante: resultadoVisitante
-                })
-                .eq('partido_id', partidoId)
-                .neq('estado', 'ganada');
-            
-            const mensaje = `✅ Partido finalizado!\n🎯 Resultado: ${resultadoLocal} - ${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Pozo: $${pozoPartido.toLocaleString()}\n🎁 Premio por ganador: $${premioPorGanador.toLocaleString()}\n🏠 Comisión (10%): $${(pozoPartido * 0.1).toLocaleString()}`;
-            alert(mensaje);
-            
-            if (usuarioActual) {
-                const { data: usuarioActualizado } = await _supabase
-                    .from('usuarios')
-                    .select('saldo')
-                    .eq('id', usuarioActual.id)
-                    .single();
-                if (usuarioActualizado) {
-                    usuarioActual.saldo = usuarioActualizado.saldo;
-                    actualizarSaldo();
-                }
-            }
-            
-            await cargarDatos();
-            await cargarMisApuestas();
-        };
-        
-        // ============ MIS APUESTAS ============
-        async function cargarMisApuestas() {
-            if (!usuarioActual) return;
-            const { data } = await _supabase.from('apuestas').select('*').eq('usuario_id', usuarioActual.id).order('fecha_apuesta', { ascending: false });
-            const container = document.getElementById('misApuestas');
-            if (!data || data.length === 0) { container.innerHTML = '<p>Aún no has realizado apuestas</p>'; return; }
-            container.innerHTML = data.map(a => `<div class="apuesta-item"><div><strong>${a.partido}</strong><br>Tu pronóstico: ${a.marcador_local}-${a.marcador_visitante}<br>Apostaste: $${a.monto.toLocaleString()}${a.estado === 'ganada' ? `<br>🎉 GANASTE: $${(a.ganancia_recibida || 0).toLocaleString()}` : ''}</div><div>${a.estado === 'pendiente' ? '⏳ Pendiente' : a.estado === 'ganada' ? '✅ Ganada' : '❌ Perdida'}</div></div>`).join('');
+            cargarPartidos();
+            cargarMisApuestas();
         }
-        
-        // ============ RECARGAS ============
-        function mostrarModalPago() {
-            const medio = document.getElementById('medioPago').value;
-            let datos = '';
-            if (medio === 'nequi') datos = '🔑 Nequi llave: <strong>0091030441</strong>';
-            else if (medio === 'daviplata') datos = '⚠️ Daviplata no disponible. Usa Nequi o Bancolombia.';
-            else datos = '🏦 Bancolombia: <strong>26269998309</strong>';
-            document.getElementById('datosPago').innerHTML = datos;
-            document.getElementById('modalPago').style.display = 'flex';
-        }
-        
-        async function solicitarRecarga() {
-            const monto = parseInt(document.getElementById('montoRecarga').value);
-            const medioPago = document.getElementById('medioPago').value;
-            if (!monto || monto < 5000) { alert('El monto mínimo es $5,000'); return; }
-            await _supabase.from('recargas').insert([{ id: Date.now().toString(), usuario_id: usuarioActual.id, monto: monto, medio_pago: medioPago, estado: 'verificando' }]);
-            alert('✅ Solicitud enviada. Un administrador verificará y acreditará tu saldo en breve.');
-            cerrarModal();
-        }
-        
-        function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; document.getElementById('montoRecarga').value = ''; }
-        function actualizarSaldo() { document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo.toLocaleString()}`; }
-        
-        // ============ FUNCIONES ADMIN PANEL ============
-        function abrirPanelAdmin() {
-            const pass = prompt('🔐 Ingrese contraseña de administrador:');
-            if (pass === ADMIN_PASSWORD) {
-                document.getElementById('adminPanel').style.display = 'block';
-                document.getElementById('adminBtn').style.display = 'none';
-            } else {
-                alert('❌ Contraseña incorrecta');
-            }
-        }
-        
-        function cerrarPanelAdmin() {
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('adminBtn').style.display = 'flex';
-        }
-        
-        async function verPozo() {
-            const { data: apuestas } = await _supabase.from('apuestas').select('monto, estado');
-            const total = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
-            const pendientes = apuestas?.filter(a => a.estado === 'pendiente').length || 0;
-            alert(`💰 POZO TOTAL: $${total.toLocaleString()}\n📊 Apuestas pendientes: ${pendientes}\n🎯 Total apuestas: ${apuestas?.length || 0}`);
-        }
-        
-        async function verRecargasPendientes() {
-            const { data } = await _supabase.from('recargas').select('*').eq('estado', 'verificando');
-            if (!data || data.length === 0) {
-                alert('📋 No hay recargas pendientes');
-                return;
-            }
-            let mensaje = '📋 RECARGAS PENDIENTES:\n\n';
-            data.forEach(r => {
-                mensaje += `ID: ${r.id}\nUsuario: ${r.usuario_id}\nMonto: $${r.monto}\nMedio: ${r.medio_pago}\n---\n`;
-            });
-            mensaje += '\n💡 Para confirmar, ve a Supabase → Table Editor → recargas';
-            alert(mensaje);
-        }
-        
-        // ============ INICIALIZACIÓN ============
-        window.onload = function() {
-            console.log("🚀 Mundial 2026 - Pozo Acumulativo");
-            console.log("📌 Función admin: window.cerrarPartido(id, resultadoLocal, resultadoVisitante)");
-            
-            document.getElementById('btnRegistrar').onclick = registrar;
-            document.getElementById('btnRecargar').onclick = mostrarModalPago;
-            document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
-            document.getElementById('btnCerrarModal').onclick = cerrarModal;
-            
-            // Admin panel
-            document.getElementById('adminBtn').onclick = abrirPanelAdmin;
-            document.getElementById('btnCerrarAdmin').onclick = cerrarPanelAdmin;
-            document.getElementById('btnCerrarPartido').onclick = () => {
-                const id = parseInt(document.getElementById('adminPartido').value);
-                const gL = parseInt(document.getElementById('adminGolL').value);
-                const gV = parseInt(document.getElementById('adminGolV').value);
-                if (isNaN(gL) || isNaN(gV)) alert('Ingresa el resultado');
-                else window.cerrarPartido(id, gL, gV);
-            };
-            document.getElementById('btnVerPozo').onclick = verPozo;
-            document.getElementById('btnVerRecargas').onclick = verRecargasPendientes;
-            
-            const guardado = localStorage.getItem('usuario');
-            if (guardado) {
-                usuarioActual = JSON.parse(guardado);
-                document.getElementById('panelRegistro').style.display = 'none';
-                document.getElementById('panelPrincipal').style.display = 'block';
-                actualizarSaldo();
-                cargarDatos();
-                cargarPartidos();
-                cargarMisApuestas();
-            }
-        };
-    })();
+    };
 </script>
 </body>
 </html>
