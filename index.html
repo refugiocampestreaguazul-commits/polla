@@ -20,8 +20,20 @@
             border-radius: 15px;
             text-align: center;
             margin-bottom: 20px;
+            position: relative;
         }
         .header h1 { color: #1a472a; font-size: 2em; }
+        .usuario-info {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #1a472a;
+            color: #ffd700;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
         .card {
             background: white;
             border-radius: 15px;
@@ -53,7 +65,7 @@
         button:hover { background: #ffed4a; }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -180,9 +192,16 @@
         .admin-panel button { margin-top: 10px; }
         .close-btn { background: #ff4444 !important; color: white !important; }
         .oculto { display: none; }
+        .btn-cambiar {
+            background: #666;
+            color: white;
+            margin-top: 5px;
+        }
+        .btn-cambiar:hover { background: #888; }
         @media (max-width: 768px) {
             .partidos-grid { grid-template-columns: 1fr; }
             .admin-panel { width: 90%; right: 5%; }
+            .usuario-info { font-size: 10px; top: 10px; right: 10px; }
         }
     </style>
 </head>
@@ -191,7 +210,8 @@
     <div class="header">
         <h1>🏆 MUNDIAL 2026 🏆</h1>
         <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Pozo Acumulativo</p>
-        <small>⚠️ Solo mayores de 18 años | Cada apuesta: $5,000 | Casa: 10% | Ganadores: 90%</small>
+        <small>⚠️ Solo mayores de 18 años | Cada apuesta: $5,000</small>
+        <div id="usuarioInfo" class="usuario-info" style="display:none;"></div>
     </div>
 
     <!-- Panel de Registro -->
@@ -205,17 +225,12 @@
 
     <!-- Panel Principal -->
     <div id="panelPrincipal" class="oculto">
-        <!-- ESTADÍSTICAS GLOBALES -->
+        <!-- ESTADÍSTICAS GLOBALES (SIN COMISIÓN) -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div>💰 POZO TOTAL</div>
                 <div class="stat-number" id="pozoTotal">$0</div>
-                <small>90% para ganadores</small>
-            </div>
-            <div class="stat-card">
-                <div>🏠 COMISIÓN (10%)</div>
-                <div class="stat-number" id="comisionTotal">$0</div>
-                <small>Administración</small>
+                <small>Premio acumulado</small>
             </div>
             <div class="stat-card">
                 <div>👥 JUGADORES</div>
@@ -232,7 +247,7 @@
             <div>💰 MI SALDO</div>
             <div class="stat-number" id="saldo">$0</div>
             <button id="btnRecargar" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #ffd700; color: #1a472a;">➕ Recargar (mín $5,000)</button>
-            <button id="btnCambiarUsuario" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #666; color: white;">🔄 Cambiar Usuario</button>
+            <button id="btnCambiarUsuario" class="btn-cambiar" style="width: auto; padding: 10px 30px; margin-top: 10px;">🔄 Cambiar Usuario</button>
         </div>
 
         <!-- RANKING -->
@@ -352,6 +367,8 @@
         
         document.getElementById('panelRegistro').classList.add('oculto');
         document.getElementById('panelPrincipal').classList.remove('oculto');
+        document.getElementById('usuarioInfo').style.display = 'block';
+        document.getElementById('usuarioInfo').innerHTML = `👤 ${nombre}`;
         
         actualizarSaldo();
         cargarDatosGlobales();
@@ -361,16 +378,13 @@
         alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
     }
     
-    // ============ DATOS GLOBALES ============
+    // ============ DATOS GLOBALES (SIN COMISIÓN) ============
     async function cargarDatosGlobales() {
         try {
             const { data: apuestas } = await db.from('apuestas').select('monto');
-            const pozoBruto = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
-            const comision = pozoBruto * 0.1;
-            const pozoNeto = pozoBruto * 0.9;
+            const pozoTotal = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
             
-            document.getElementById('pozoTotal').innerHTML = `$${pozoNeto.toLocaleString()}`;
-            document.getElementById('comisionTotal').innerHTML = `$${comision.toLocaleString()}`;
+            document.getElementById('pozoTotal').innerHTML = `$${pozoTotal.toLocaleString()}`;
             
             const { count: jugadores } = await db.from('usuarios').select('*', { count: 'exact', head: true });
             document.getElementById('totalJugadores').innerText = jugadores || 0;
@@ -510,8 +524,7 @@
         );
         
         const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
-        const pozoGanadores = Math.floor(pozoPartido * 0.9);
-        const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoGanadores / ganadores.length) : 0;
+        const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoPartido / ganadores.length) : 0;
         
         // Pagar a ganadores
         for (const ganador of ganadores) {
@@ -532,7 +545,7 @@
             resultado_real_visitante: resultadoVisitante
         }).eq('partido_id', partidoId).neq('estado', 'ganada');
         
-        alert(`✅ Partido finalizado!\n🎯 Resultado: ${resultadoLocal} - ${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio por ganador: $${premioPorGanador.toLocaleString()}\n🏠 Comisión (10%): $${(pozoPartido * 0.1).toLocaleString()}`);
+        alert(`✅ Partido finalizado!\n🎯 Resultado: ${resultadoLocal} - ${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio por ganador: $${premioPorGanador.toLocaleString()}`);
         
         if (usuarioActual) {
             const { data: updated } = await db.from('usuarios').select('saldo').eq('id', usuarioActual.id).single();
@@ -580,6 +593,7 @@
         usuarioActual = null;
         document.getElementById('panelPrincipal').classList.add('oculto');
         document.getElementById('panelRegistro').classList.remove('oculto');
+        document.getElementById('usuarioInfo').style.display = 'none';
         document.getElementById('nombre').value = '';
         document.getElementById('celular').value = '';
     }
@@ -598,7 +612,7 @@
     async function verPozo() {
         const { data: apuestas } = await db.from('apuestas').select('monto');
         const total = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
-        alert(`💰 POZO BRUTO: $${total.toLocaleString()}\n🏠 COMISIÓN (10%): $${(total * 0.1).toLocaleString()}\n🎁 PARA GANADORES (90%): $${(total * 0.9).toLocaleString()}`);
+        alert(`💰 POZO TOTAL: $${total.toLocaleString()}`);
     }
     
     // ============ EVENTOS ============
@@ -630,6 +644,8 @@
             usuarioActual = JSON.parse(guardado);
             document.getElementById('panelRegistro').classList.add('oculto');
             document.getElementById('panelPrincipal').classList.remove('oculto');
+            document.getElementById('usuarioInfo').style.display = 'block';
+            document.getElementById('usuarioInfo').innerHTML = `👤 ${usuarioActual.nombre}`;
             actualizarSaldo();
             cargarDatosGlobales();
             cargarPartidos();
