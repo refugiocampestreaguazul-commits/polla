@@ -34,15 +34,8 @@
             text-align: right;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-        .usuario-card .nombre {
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .usuario-card .saldo {
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-        }
+        .usuario-card .nombre { font-size: 14px; font-weight: bold; }
+        .usuario-card .saldo { font-size: 18px; font-weight: bold; color: white; }
         .card {
             background: white;
             border-radius: 15px;
@@ -201,6 +194,10 @@
             padding: 8px 20px;
             margin-top: 8px;
         }
+        input[type="password"] {
+            letter-spacing: 3px;
+            font-size: 18px;
+        }
         @media (max-width: 768px) {
             .partidos-grid { grid-template-columns: 1fr; }
             .admin-panel { width: 90%; right: 5%; }
@@ -235,7 +232,6 @@
 
     <!-- Panel Principal -->
     <div id="panelPrincipal" class="oculto">
-        <!-- ESTADÍSTICAS GLOBALES -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div>💰 POZO TOTAL</div>
@@ -252,26 +248,22 @@
             </div>
         </div>
 
-        <!-- SALDO PERSONAL -->
         <div class="saldo-box">
             <div>💰 MI SALDO</div>
             <div class="stat-number" id="saldo">$0</div>
             <button id="btnRecargar" class="btn-recargar">➕ Recargar saldo (mín $5,000)</button>
         </div>
 
-        <!-- RANKING -->
         <div class="card">
             <h2>🏆 RANKING DE GANADORES</h2>
             <div id="ranking">Cargando...</div>
         </div>
 
-        <!-- PARTIDOS -->
         <div class="card">
             <h2>⚽ CALENDARIO OFICIAL FIFA 2026</h2>
             <div class="partidos-grid" id="partidosGrid"></div>
         </div>
 
-        <!-- MIS APUESTAS -->
         <div class="card">
             <h2>📋 MIS APUESTAS</h2>
             <div id="misApuestas"></div>
@@ -304,6 +296,17 @@
     <button id="btnCerrarAdmin" class="close-btn">❌ CERRAR</button>
 </div>
 
+<!-- Modal de Contraseña ADMIN (enmascarada) -->
+<div id="modalPassword" class="modal">
+    <div class="modal-content">
+        <h3>🔐 ADMINISTRADOR</h3>
+        <p>Ingrese la contraseña:</p>
+        <input type="password" id="adminPassword" placeholder="Contraseña" autocomplete="off">
+        <button id="btnVerificarPass">✅ Ingresar</button>
+        <button id="btnCancelarPass" class="close-btn">❌ Cancelar</button>
+    </div>
+</div>
+
 <!-- Modal Recarga -->
 <div id="modalPago" class="modal">
     <div class="modal-content">
@@ -329,12 +332,11 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXVwd2Z5cW5qZWJua3hza2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNzM5OTYsImV4cCI6MjA5Njg0OTk5Nn0.TXyMksAdY1XxnbRR5Thx8yLsBcZg7bpahHC9om3VFF4';
     
     const COSTO_APUESTA = 5000;
-    const ADMIN_PASSWORD = 'admin2026';
+    const ADMIN_PASSWORD = 'admin123';
     
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let usuarioActual = null;
     
-    // Partidos del mundial
     const partidosLista = [
         { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A' },
         { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A' },
@@ -346,7 +348,6 @@
         { id: 8, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D' }
     ];
     
-    // ============ ACTUALIZAR TARJETA DE USUARIO ============
     function actualizarUsuarioCard() {
         if (usuarioActual) {
             const card = document.getElementById('usuarioCard');
@@ -358,7 +359,6 @@
         }
     }
     
-    // ============ REGISTRO ============
     async function registrar() {
         const nombre = document.getElementById('nombre').value;
         const email = document.getElementById('email').value;
@@ -401,19 +401,16 @@
         alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
     }
     
-    // ============ DATOS GLOBALES ============
     async function cargarDatosGlobales() {
         try {
             const { data: apuestas } = await db.from('apuestas').select('monto');
             const pozoTotal = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
-            
             document.getElementById('pozoTotal').innerHTML = `$${pozoTotal.toLocaleString()}`;
             
             const { count: jugadores } = await db.from('usuarios').select('*', { count: 'exact', head: true });
             document.getElementById('totalJugadores').innerText = jugadores || 0;
             document.getElementById('totalApuestas').innerText = apuestas?.length || 0;
             
-            // Ranking
             const { data: ganadores } = await db.from('apuestas').select('nombre_usuario, ganancia_recibida').eq('estado', 'ganada');
             const rankingMap = new Map();
             ganadores?.forEach(g => {
@@ -435,10 +432,8 @@
         } catch (e) { console.error(e); }
     }
     
-    // ============ PARTIDOS ============
     async function cargarPartidos() {
         let partidos = partidosLista;
-        
         try {
             const { data } = await db.from('partidos').select('*');
             if (data && data.length > 0) partidos = data;
@@ -458,7 +453,6 @@
         `).join('');
     }
     
-    // ============ APOSTAR ============
     window.apostar = async function(id, local, visitante) {
         if (!usuarioActual) { alert('Regístrate primero'); return; }
         
@@ -502,7 +496,6 @@
         document.getElementById(`golV_${id}`).value = '';
     };
     
-    // ============ MIS APUESTAS ============
     async function cargarMisApuestas() {
         if (!usuarioActual) return;
         
@@ -530,7 +523,6 @@
         `).join('');
     }
     
-    // ============ ADMIN: CERRAR PARTIDO ============
     window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
         const { data: apuestasPartido } = await db.from('apuestas')
             .select('*')
@@ -549,7 +541,6 @@
         const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
         const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoPartido / ganadores.length) : 0;
         
-        // Pagar a ganadores
         for (const ganador of ganadores) {
             const { data: user } = await db.from('usuarios').select('saldo').eq('id', ganador.usuario_id).single();
             await db.from('usuarios').update({ saldo: (user?.saldo || 0) + premioPorGanador }).eq('id', ganador.usuario_id);
@@ -561,7 +552,6 @@
             }).eq('id', ganador.id);
         }
         
-        // Marcar perdedores
         await db.from('apuestas').update({ 
             estado: 'perdida',
             resultado_real_local: resultadoLocal,
@@ -581,7 +571,6 @@
         await cargarDatosGlobales();
     };
     
-    // ============ RECARGAS ============
     function mostrarModalPago() {
         const medio = document.getElementById('medioPago').value;
         document.getElementById('datosPago').innerHTML = medio === 'nequi' ? '🔑 Nequi: 0091030441' : '🏦 Bancolombia: 26269998309';
@@ -609,16 +598,37 @@
     
     function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
     
-    // ============ ADMIN PANEL ============
+    // === ADMIN CON CONTRASEÑA ENMASCARADA ===
     function abrirAdmin() {
-        const pass = prompt('Contraseña de administrador:');
+        document.getElementById('modalPassword').style.display = 'flex';
+        document.getElementById('adminPassword').focus();
+    }
+    
+    document.getElementById('btnVerificarPass').onclick = function() {
+        const pass = document.getElementById('adminPassword').value;
         if (pass === ADMIN_PASSWORD) {
+            document.getElementById('modalPassword').style.display = 'none';
             document.getElementById('adminPanel').style.display = 'block';
             document.getElementById('adminBtn').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
         } else {
-            alert('Contraseña incorrecta');
+            alert('❌ Contraseña incorrecta');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminPassword').focus();
         }
-    }
+    };
+    
+    document.getElementById('btnCancelarPass').onclick = function() {
+        document.getElementById('modalPassword').style.display = 'none';
+        document.getElementById('adminPassword').value = '';
+    };
+    
+    // Permitir Enter en el campo de contraseña
+    document.getElementById('adminPassword').onkeypress = function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('btnVerificarPass').click();
+        }
+    };
     
     async function verPozo() {
         const { data: apuestas } = await db.from('apuestas').select('monto');
@@ -626,7 +636,7 @@
         alert(`💰 POZO TOTAL: $${total.toLocaleString()}`);
     }
     
-    // ============ EVENTOS ============
+    // EVENTOS
     document.getElementById('btnRegistrar').onclick = registrar;
     document.getElementById('btnRecargar').onclick = mostrarModalPago;
     document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
@@ -647,8 +657,8 @@
     };
     document.getElementById('btnVerPozo').onclick = verPozo;
     
-    // ============ INICIAR ============
     window.onload = () => {
+        console.log("🚀 App iniciada - Contraseña admin: admin123");
         const guardado = localStorage.getItem('usuario');
         if (guardado) {
             usuarioActual = JSON.parse(guardado);
