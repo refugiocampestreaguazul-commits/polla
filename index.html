@@ -2,9 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>🏆 Mundial 2026 - Pozo Acumulativo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Canvas para confeti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -65,6 +67,7 @@
             border: none;
         }
         button:hover { background: #ffed4a; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -99,6 +102,10 @@
             border-left: 5px solid #ffd700;
             margin-bottom: 15px;
         }
+        .partido-card.cerrado {
+            opacity: 0.7;
+            border-left-color: #999;
+        }
         .fecha-hora {
             background: #1a472a;
             color: white;
@@ -108,6 +115,17 @@
             font-size: 12px;
             margin: 5px 0;
         }
+        .estado-partido {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+        .estado-abierto { background: #4caf50; color: white; }
+        .estado-cerrado { background: #ff4444; color: white; }
+        .estado-envivo { background: #ff9800; color: white; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         .marcador-inputs {
             display: flex;
             gap: 10px;
@@ -127,6 +145,9 @@
             justify-content: space-between;
             flex-wrap: wrap;
         }
+        .apuesta-ganada { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .apuesta-perdida { background: #ffebee; border-left: 4px solid #ff4444; }
+        .apuesta-pendiente { background: #fff3e0; border-left: 4px solid #ff9800; }
         .ranking-item {
             display: flex;
             justify-content: space-between;
@@ -187,22 +208,6 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        .admin-panel h3 { color: #ffd700; margin-bottom: 15px; text-align: center; }
-        .admin-panel h4 { color: #ffd700; margin: 10px 0; }
-        .admin-panel button { margin-top: 5px; }
-        .close-btn { background: #ff4444 !important; color: white !important; }
-        .oculto { display: none; }
-        .btn-recargar {
-            background: #ffd700;
-            color: #1a472a;
-            width: auto;
-            padding: 8px 20px;
-            margin-top: 8px;
-        }
-        input[type="password"] {
-            letter-spacing: 3px;
-            font-size: 18px;
-        }
         .seccion-admin {
             background: #0a2a1a;
             padding: 12px;
@@ -217,25 +222,57 @@
             border-left: 3px solid #ffd700;
             font-size: 13px;
         }
-        .solicitud-item small { color: #ccc; font-size: 10px; }
         .btn-aprobar { background: #4caf50; color: white; margin: 3px 0; padding: 8px; font-size: 14px; }
         .btn-rechazar { background: #ff4444; color: white; margin: 3px 0; padding: 8px; font-size: 14px; }
-        hr { border-color: #ffd700; margin: 10px 0; }
-        .btn-actualizar { background: #2196F3; color: white; }
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 30px;
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .footer a { color: #ffd700; text-decoration: none; }
+        .ganador-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ffd700, #ffed4a);
+            color: #1a472a;
+            padding: 20px 40px;
+            border-radius: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            animation: fadeInOut 4s ease-in-out;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
         @media (max-width: 768px) {
             .partidos-grid { grid-template-columns: 1fr; }
-            .admin-panel { width: 95%; right: 2.5%; left: 2.5%; bottom: 10px; }
+            .admin-panel { width: 95%; right: 2.5%; left: 2.5%; bottom: 10px; max-height: 70vh; }
             .usuario-card { position: relative; top: 0; right: 0; margin-bottom: 15px; text-align: center; }
             .header { padding-top: 80px; }
+            .ganador-alert { font-size: 18px; padding: 15px 30px; width: 90%; text-align: center; }
         }
+        .btn-actualizar { background: #2196F3; color: white; }
+        .close-btn { background: #ff4444 !important; color: white !important; }
+        .badge { background: #ff9800; color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 5px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>🏆 MUNDIAL 2026 🏆</h1>
-        <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Pozo Acumulativo</p>
-        <small>⚠️ Solo mayores de 18 años | Cada apuesta: $5,000</small>
+        <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Horario Colombia (UTC-5)</p>
+        <small>⚠️ Cada apuesta: $5,000 | Pozo acumulativo</small>
         <div id="usuarioCard" class="usuario-card" style="display:none;"></div>
     </div>
 
@@ -275,7 +312,7 @@
         <div class="saldo-box">
             <div>💰 MI SALDO</div>
             <div class="stat-number" id="saldo">$0</div>
-            <button id="btnRecargar" class="btn-recargar">➕ Recargar saldo (mín $5,000)</button>
+            <button id="btnRecargar" style="background: #ffd700; color: #1a472a; width: auto; padding: 8px 20px;">➕ Recargar saldo (mín $5,000)</button>
         </div>
 
         <div class="card">
@@ -298,40 +335,18 @@
 <!-- Botón Admin -->
 <div id="adminBtn" class="admin-btn">🔑</div>
 
-<!-- Panel Admin COMPLETO -->
+<!-- Panel Admin -->
 <div id="adminPanel" class="admin-panel">
-    <h3>👑 ADMINISTRADOR</h3>
+    <h3 style="color:#ffd700; text-align:center;">👑 ADMINISTRADOR</h3>
     
-    <!-- SECCIÓN 1: CERRAR PARTIDO -->
-    <div class="seccion-admin">
-        <h4>⚽ CERRAR PARTIDO</h4>
-        <select id="adminPartido">
-            <option value="1">Colombia vs Argentina</option>
-            <option value="2">Brasil vs Uruguay</option>
-            <option value="3">Francia vs España</option>
-            <option value="4">Alemania vs Inglaterra</option>
-            <option value="5">Portugal vs Holanda</option>
-            <option value="6">Italia vs Bélgica</option>
-            <option value="7">México vs Estados Unidos</option>
-            <option value="8">Japón vs Corea del Sur</option>
-        </select>
-        <div style="display: flex; gap: 10px;">
-            <input type="number" id="adminGolL" placeholder="Goles Local" min="0">
-            <input type="number" id="adminGolV" placeholder="Goles Visitante" min="0">
-        </div>
-        <button id="btnCerrarPartido">✅ CERRAR PARTIDO</button>
-    </div>
-    
-    <!-- SECCIÓN 2: APROBAR RECARGAS -->
     <div class="seccion-admin">
         <h4>💰 APROBAR RECARGAS</h4>
-        <button id="btnActualizarRecargas" class="btn-actualizar" style="background:#2196F3;">🔄 ACTUALIZAR LISTA</button>
-        <div id="listaRecargas" style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
-            <p style="text-align:center; color:#ccc;">Cargando solicitudes...</p>
+        <button id="btnActualizarRecargas" class="btn-actualizar">🔄 ACTUALIZAR</button>
+        <div id="listaRecargas" style="max-height: 250px; overflow-y: auto; margin-top: 10px;">
+            <p style="text-align:center; color:#ccc;">Cargando...</p>
         </div>
     </div>
     
-    <!-- SECCIÓN 3: ESTADÍSTICAS -->
     <div class="seccion-admin">
         <h4>📊 ESTADÍSTICAS</h4>
         <button id="btnVerPozo">💰 VER POZO ACTUAL</button>
@@ -352,7 +367,7 @@
     </div>
 </div>
 
-<!-- Modal Recarga (para usuarios) -->
+<!-- Modal Recarga -->
 <div id="modalPago" class="modal">
     <div class="modal-content">
         <h3>💰 Recargar saldo</h3>
@@ -371,6 +386,14 @@
     </div>
 </div>
 
+<!-- Footer con normatividad colombiana -->
+<div class="footer">
+    <p>⚠️ <strong>Ley 643 de 2001 - Ley de Juegos de Suerte y Azar en Colombia</strong> | Este es un juego social entre amigos, sin ánimo de lucro. 
+    Las apuestas son voluntarias y el premio corresponde al 100% del pozo acumulado. 
+    Prohibida la participación a menores de 18 años. Juega responsablemente.</p>
+    <p style="margin-top: 8px;">© 2026 Mundial BetPlay - Todos los derechos reservados | <a href="#">Términos y condiciones</a></p>
+</div>
+
 <script>
     // ============ CONFIGURACIÓN ============
     const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
@@ -382,16 +405,53 @@
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let usuarioActual = null;
     
+    // ============ CALENDARIO FIFA 2026 COMPLETO con HORA COLOMBIA ============
     const partidosLista = [
-        { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A' },
-        { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A' },
-        { id: 3, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B' },
-        { id: 4, local: 'Alemania', visitante: 'Inglaterra', fecha: '2026-06-15', hora: '16:00', grupo: 'Grupo B' },
-        { id: 5, local: 'Portugal', visitante: 'Holanda', fecha: '2026-06-16', hora: '12:00', grupo: 'Grupo C' },
-        { id: 6, local: 'Italia', visitante: 'Bélgica', fecha: '2026-06-16', hora: '18:00', grupo: 'Grupo C' },
-        { id: 7, local: 'México', visitante: 'Estados Unidos', fecha: '2026-06-17', hora: '15:00', grupo: 'Grupo D' },
-        { id: 8, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D' }
+        // FASE DE GRUPOS - GRUPO A
+        { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A', estado: 'abierto' },
+        { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A', estado: 'abierto' },
+        { id: 3, local: 'Colombia', visitante: 'Uruguay', fecha: '2026-06-18', hora: '16:00', grupo: 'Grupo A', estado: 'abierto' },
+        { id: 4, local: 'Argentina', visitante: 'Brasil', fecha: '2026-06-18', hora: '20:00', grupo: 'Grupo A', estado: 'abierto' },
+        { id: 5, local: 'Argentina', visitante: 'Uruguay', fecha: '2026-06-22', hora: '15:00', grupo: 'Grupo A', estado: 'abierto' },
+        { id: 6, local: 'Colombia', visitante: 'Brasil', fecha: '2026-06-22', hora: '19:00', grupo: 'Grupo A', estado: 'abierto' },
+        // GRUPO B
+        { id: 7, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B', estado: 'abierto' },
+        { id: 8, local: 'Alemania', visitante: 'Inglaterra', fecha: '2026-06-15', hora: '16:00', grupo: 'Grupo B', estado: 'abierto' },
+        { id: 9, local: 'Francia', visitante: 'Inglaterra', fecha: '2026-06-19', hora: '14:00', grupo: 'Grupo B', estado: 'abierto' },
+        { id: 10, local: 'España', visitante: 'Alemania', fecha: '2026-06-19', hora: '18:00', grupo: 'Grupo B', estado: 'abierto' },
+        { id: 11, local: 'España', visitante: 'Inglaterra', fecha: '2026-06-23', hora: '15:00', grupo: 'Grupo B', estado: 'abierto' },
+        { id: 12, local: 'Francia', visitante: 'Alemania', fecha: '2026-06-23', hora: '19:00', grupo: 'Grupo B', estado: 'abierto' },
+        // GRUPO C
+        { id: 13, local: 'Portugal', visitante: 'Holanda', fecha: '2026-06-16', hora: '12:00', grupo: 'Grupo C', estado: 'abierto' },
+        { id: 14, local: 'Italia', visitante: 'Bélgica', fecha: '2026-06-16', hora: '16:00', grupo: 'Grupo C', estado: 'abierto' },
+        { id: 15, local: 'Portugal', visitante: 'Bélgica', fecha: '2026-06-20', hora: '14:00', grupo: 'Grupo C', estado: 'abierto' },
+        { id: 16, local: 'Holanda', visitante: 'Italia', fecha: '2026-06-20', hora: '18:00', grupo: 'Grupo C', estado: 'abierto' },
+        { id: 17, local: 'Holanda', visitante: 'Bélgica', fecha: '2026-06-24', hora: '15:00', grupo: 'Grupo C', estado: 'abierto' },
+        { id: 18, local: 'Portugal', visitante: 'Italia', fecha: '2026-06-24', hora: '19:00', grupo: 'Grupo C', estado: 'abierto' },
+        // GRUPO D
+        { id: 19, local: 'México', visitante: 'Estados Unidos', fecha: '2026-06-17', hora: '14:00', grupo: 'Grupo D', estado: 'abierto' },
+        { id: 20, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D', estado: 'abierto' },
+        { id: 21, local: 'México', visitante: 'Corea del Sur', fecha: '2026-06-21', hora: '15:00', grupo: 'Grupo D', estado: 'abierto' },
+        { id: 22, local: 'Estados Unidos', visitante: 'Japón', fecha: '2026-06-21', hora: '19:00', grupo: 'Grupo D', estado: 'abierto' },
+        { id: 23, local: 'Estados Unidos', visitante: 'Corea del Sur', fecha: '2026-06-25', hora: '15:00', grupo: 'Grupo D', estado: 'abierto' },
+        { id: 24, local: 'México', visitante: 'Japón', fecha: '2026-06-25', hora: '19:00', grupo: 'Grupo D', estado: 'abierto' }
     ];
+    
+    // ============ FUNCIONES ============
+    function mostrarGanador(mensaje) {
+        // Mostrar alerta visual
+        const alerta = document.createElement('div');
+        alerta.className = 'ganador-alert';
+        alerta.innerHTML = `🎉 ¡${mensaje}! 🎉<br>💰 Revisa tu saldo`;
+        document.body.appendChild(alerta);
+        
+        // Confeti
+        canvasConfetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+        canvasConfetti({ particleCount: 100, spread: 70, origin: { y: 0.6, x: 0.2 }, colors: ['#ffd700', '#1a472a'] });
+        canvasConfetti({ particleCount: 100, spread: 70, origin: { y: 0.6, x: 0.8 }, colors: ['#ffd700', '#1a472a'] });
+        
+        setTimeout(() => alerta.remove(), 4000);
+    }
     
     function actualizarUsuarioCard() {
         if (usuarioActual) {
@@ -403,6 +463,98 @@
             `;
             document.getElementById('saldo').innerHTML = `$${(usuarioActual.saldo || 0).toLocaleString()}`;
         }
+    }
+    
+    // Verificar si un partido ya pasó
+    function partidoCerrado(fecha, hora) {
+        const ahora = new Date();
+        const [year, month, day] = fecha.split('-');
+        const [horas, minutos] = hora.split(':');
+        const fechaPartido = new Date(year, month-1, day, horas, minutos);
+        return ahora > fechaPartido;
+    }
+    
+    // Cerrar partidos automáticamente y pagar premios
+    async function verificarYCerrarPartidos() {
+        console.log("🔍 Verificando partidos para cerrar automáticamente...");
+        
+        // Obtener partidos no cerrados
+        const { data: partidosAbiertos } = await db.from('partidos').select('*').eq('estado', 'abierto');
+        const partidosParaCerrar = partidosAbiertos || [];
+        
+        for (const partido of partidosParaCerrar) {
+            // Si el partido ya debería estar cerrado por fecha/hora
+            if (partidoCerrado(partido.fecha, partido.hora)) {
+                console.log(`⏰ Cerrando partido automáticamente: ${partido.local} vs ${partido.visitante}`);
+                
+                // Generar resultado aleatorio (simulación)
+                const resultadoLocal = Math.floor(Math.random() * 5);
+                const resultadoVisitante = Math.floor(Math.random() * 5);
+                
+                await cerrarPartidoAuto(partido.id, resultadoLocal, resultadoVisitante);
+            }
+        }
+    }
+    
+    async function cerrarPartidoAuto(partidoId, resultadoLocal, resultadoVisitante) {
+        const { data: apuestasPartido } = await db.from('apuestas')
+            .select('*')
+            .eq('partido_id', partidoId)
+            .eq('estado', 'pendiente');
+        
+        if (!apuestasPartido || apuestasPartido.length === 0) {
+            await db.from('partidos').update({ estado: 'cerrado', resultado_local: resultadoLocal, resultado_visitante: resultadoVisitante }).eq('id', partidoId);
+            return;
+        }
+        
+        const ganadores = apuestasPartido.filter(a => 
+            a.marcador_local === resultadoLocal && a.marcador_visitante === resultadoVisitante
+        );
+        
+        const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
+        const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoPartido / ganadores.length) : 0;
+        
+        // Pagar a ganadores y notificar
+        for (const ganador of ganadores) {
+            const { data: user } = await db.from('usuarios').select('saldo').eq('id', ganador.usuario_id).single();
+            await db.from('usuarios').update({ saldo: (user?.saldo || 0) + premioPorGanador }).eq('id', ganador.usuario_id);
+            await db.from('apuestas').update({ 
+                estado: 'ganada', 
+                ganancia_recibida: premioPorGanador,
+                resultado_real_local: resultadoLocal,
+                resultado_real_visitante: resultadoVisitante
+            }).eq('id', ganador.id);
+            
+            // Mostrar confeti si el usuario actual es el ganador
+            if (usuarioActual && usuarioActual.id === ganador.usuario_id) {
+                mostrarGanador(`GANASTE $${premioPorGanador.toLocaleString()}`);
+            }
+        }
+        
+        await db.from('apuestas').update({ 
+            estado: 'perdida',
+            resultado_real_local: resultadoLocal,
+            resultado_real_visitante: resultadoVisitante
+        }).eq('partido_id', partidoId).neq('estado', 'ganada');
+        
+        await db.from('partidos').update({ 
+            estado: 'cerrado', 
+            resultado_local: resultadoLocal, 
+            resultado_visitante: resultadoVisitante 
+        }).eq('id', partidoId);
+        
+        console.log(`✅ Partido ${partidoId} cerrado. Ganadores: ${ganadores.length}`);
+        
+        if (usuarioActual) {
+            const { data: updated } = await db.from('usuarios').select('saldo').eq('id', usuarioActual.id).single();
+            if (updated) {
+                usuarioActual.saldo = updated.saldo;
+                actualizarUsuarioCard();
+            }
+            await cargarMisApuestas();
+        }
+        await cargarDatosGlobales();
+        await cargarPartidos();
     }
     
     // ============ REGISTRO ============
@@ -482,29 +634,76 @@
     
     // ============ PARTIDOS ============
     async function cargarPartidos() {
-        let partidos = partidosLista;
         try {
-            const { data } = await db.from('partidos').select('*');
-            if (data && data.length > 0) partidos = data;
-        } catch (e) {}
-        
-        const grid = document.getElementById('partidosGrid');
-        grid.innerHTML = partidos.map(p => `
-            <div class="partido-card">
-                <div><strong>🏆 ${p.local} vs ${p.visitante}</strong></div>
-                <div class="fecha-hora">📅 ${p.fecha} | 🕐 ${p.hora} (Hora Colombia) | ${p.grupo}</div>
-                <div class="marcador-inputs">
-                    <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;">
-                    <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;">
-                </div>
-                <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>
-            </div>
-        `).join('');
+            // Obtener o crear partidos en la BD
+            let partidos = partidosLista;
+            const { data: partidosBD } = await db.from('partidos').select('*');
+            
+            if (!partidosBD || partidosBD.length === 0) {
+                // Insertar partidos
+                for (const p of partidosLista) {
+                    await db.from('partidos').upsert(p, { onConflict: 'id' });
+                }
+            } else {
+                partidos = partidosBD;
+            }
+            
+            // Verificar y cerrar partidos automáticamente cada minuto
+            setInterval(() => verificarYCerrarPartidos(), 60000);
+            await verificarYCerrarPartidos();
+            
+            const grid = document.getElementById('partidosGrid');
+            const ahora = new Date();
+            
+            grid.innerHTML = partidos.map(p => {
+                const [year, month, day] = p.fecha.split('-');
+                const [horas, minutos] = p.hora.split(':');
+                const fechaPartido = new Date(year, month-1, day, horas, minutos);
+                const yaPaso = ahora > fechaPartido;
+                const estado = p.estado || (yaPaso ? 'cerrado' : 'abierto');
+                const puedeApostar = !yaPaso && estado !== 'cerrado';
+                
+                return `
+                    <div class="partido-card ${estado === 'cerrado' ? 'cerrado' : ''}">
+                        <div><strong>🏆 ${p.local} vs ${p.visitante}</strong></div>
+                        <div class="fecha-hora">
+                            📅 ${p.fecha} | 🕐 ${p.hora} (Hora Colombia)
+                            <span class="estado-partido ${estado === 'cerrado' ? 'estado-cerrado' : 'estado-abierto'}">
+                                ${estado === 'cerrado' ? '🔒 Cerrado' : '📢 Abierto'}
+                            </span>
+                        </div>
+                        <div style="font-size: 12px; color: #666;">${p.grupo}</div>
+                        ${p.resultado_local !== undefined ? `<div style="margin: 8px 0; background:#e0e0e0; padding:5px; border-radius:5px;">📊 Resultado final: ${p.resultado_local} - ${p.resultado_visitante}</div>` : ''}
+                        <div class="marcador-inputs">
+                            <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;" ${!puedeApostar ? 'disabled' : ''}>
+                            <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;" ${!puedeApostar ? 'disabled' : ''}>
+                        </div>
+                        ${puedeApostar ? `<button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>` : 
+                                         `<button disabled style="background:#ccc;">⏳ Partido finalizado</button>`}
+                    </div>
+                `;
+            }).join('');
+        } catch (e) { console.error(e); }
     }
     
     // ============ APOSTAR ============
     window.apostar = async function(id, local, visitante) {
         if (!usuarioActual) { alert('Regístrate primero'); return; }
+        
+        // Verificar si el partido ya pasó
+        const { data: partido } = await db.from('partidos').select('fecha, hora, estado').eq('id', id).single();
+        if (!partido || partido.estado === 'cerrado') {
+            alert('❌ Este partido ya finalizó o está cerrado');
+            return;
+        }
+        
+        const [year, month, day] = partido.fecha.split('-');
+        const [horas, minutos] = partido.hora.split(':');
+        const fechaPartido = new Date(year, month-1, day, horas, minutos);
+        if (new Date() > fechaPartido) {
+            alert('❌ No se puede apostar después de que el partido inició');
+            return;
+        }
         
         const golesL = parseInt(document.getElementById(`golL_${id}`).value);
         const golesV = parseInt(document.getElementById(`golV_${id}`).value);
@@ -540,7 +739,7 @@
         await cargarMisApuestas();
         await cargarDatosGlobales();
         
-        alert(`✅ Apuesta registrada!\n🎯 Pronóstico: ${golesL} - ${golesV}`);
+        alert(`✅ Apuesta registrada!\n🎯 Pronóstico: ${golesL} - ${golesV}\n⏳ Esperando resultado del partido.`);
         
         document.getElementById(`golL_${id}`).value = '';
         document.getElementById(`golV_${id}`).value = '';
@@ -562,71 +761,21 @@
         }
         
         container.innerHTML = data.map(a => `
-            <div class="apuesta-item">
+            <div class="apuesta-item apuesta-${a.estado}">
                 <div>
                     <strong>${a.partido}</strong><br>
                     Tu pronóstico: ${a.marcador_local} - ${a.marcador_visitante}<br>
                     Apostaste: $${a.monto.toLocaleString()}
                     ${a.estado === 'ganada' ? `<br>🎉 GANASTE: $${(a.ganancia_recibida || 0).toLocaleString()}` : ''}
+                    ${a.resultado_real_local !== undefined ? `<br>📊 Resultado real: ${a.resultado_real_local} - ${a.resultado_real_visitante}` : ''}
                 </div>
                 <div>${a.estado === 'pendiente' ? '⏳ Pendiente' : a.estado === 'ganada' ? '✅ Ganada' : '❌ Perdida'}</div>
             </div>
         `).join('');
     }
     
-    // ============ ADMIN: CERRAR PARTIDO ============
-    window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
-        const { data: apuestasPartido } = await db.from('apuestas')
-            .select('*')
-            .eq('partido_id', partidoId)
-            .eq('estado', 'pendiente');
-        
-        if (!apuestasPartido || apuestasPartido.length === 0) {
-            alert('No hay apuestas pendientes para este partido');
-            return;
-        }
-        
-        const ganadores = apuestasPartido.filter(a => 
-            a.marcador_local === resultadoLocal && a.marcador_visitante === resultadoVisitante
-        );
-        
-        const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
-        const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoPartido / ganadores.length) : 0;
-        
-        for (const ganador of ganadores) {
-            const { data: user } = await db.from('usuarios').select('saldo').eq('id', ganador.usuario_id).single();
-            await db.from('usuarios').update({ saldo: (user?.saldo || 0) + premioPorGanador }).eq('id', ganador.usuario_id);
-            await db.from('apuestas').update({ 
-                estado: 'ganada', 
-                ganancia_recibida: premioPorGanador,
-                resultado_real_local: resultadoLocal,
-                resultado_real_visitante: resultadoVisitante
-            }).eq('id', ganador.id);
-        }
-        
-        await db.from('apuestas').update({ 
-            estado: 'perdida',
-            resultado_real_local: resultadoLocal,
-            resultado_real_visitante: resultadoVisitante
-        }).eq('partido_id', partidoId).neq('estado', 'ganada');
-        
-        alert(`✅ Partido finalizado!\n🎯 Resultado: ${resultadoLocal} - ${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio por ganador: $${premioPorGanador.toLocaleString()}`);
-        
-        if (usuarioActual) {
-            const { data: updated } = await db.from('usuarios').select('saldo').eq('id', usuarioActual.id).single();
-            if (updated) {
-                usuarioActual.saldo = updated.saldo;
-                actualizarUsuarioCard();
-            }
-            await cargarMisApuestas();
-        }
-        await cargarDatosGlobales();
-    };
-    
     // ============ ADMIN: APROBAR RECARGAS ============
     async function cargarSolicitudesRecarga() {
-        console.log("Cargando solicitudes de recarga...");
-        
         const container = document.getElementById('listaRecargas');
         container.innerHTML = '<p style="text-align:center; color:#ccc;">🔄 Cargando...</p>';
         
@@ -636,18 +785,13 @@
                 .eq('estado', 'verificando')
                 .order('fecha', { ascending: false });
             
-            if (error) {
-                console.error("Error al cargar:", error);
-                container.innerHTML = '<p style="color:#ff4444;">❌ Error al cargar</p>';
-                return;
-            }
+            if (error) throw error;
             
             if (!solicitudes || solicitudes.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#ccc;">✅ No hay solicitudes pendientes</p>';
                 return;
             }
             
-            // Obtener nombres de usuarios
             let html = '';
             for (const sol of solicitudes) {
                 const { data: user } = await db.from('usuarios').select('nombre').eq('id', sol.usuario_id).single();
@@ -665,9 +809,7 @@
                 `;
             }
             container.innerHTML = html;
-            
         } catch (err) {
-            console.error("Error:", err);
             container.innerHTML = '<p style="color:#ff4444;">❌ Error al cargar</p>';
         }
     }
@@ -677,125 +819,66 @@
         if (!confirmar) return;
         
         try {
-            // 1. Obtener saldo actual del usuario
             const { data: user } = await db.from('usuarios').select('saldo').eq('id', idUsuario).single();
             const nuevoSaldo = (user?.saldo || 0) + monto;
             
-            // 2. Actualizar saldo del usuario
-            const { error: errorUpdate } = await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', idUsuario);
-            if (errorUpdate) throw new Error(errorUpdate.message);
+            await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', idUsuario);
+            await db.from('recargas').update({ estado: 'confirmado' }).eq('id', idRecarga);
             
-            // 3. Marcar recarga como confirmada
-            const { error: errorRecarga } = await db.from('recargas').update({ estado: 'confirmado' }).eq('id', idRecarga);
-            if (errorRecarga) throw new Error(errorRecarga.message);
+            alert(`✅ Recarga aprobada! Se añadieron $${monto.toLocaleString()}`);
             
-            alert(`✅ Recarga aprobada!\n💰 Se añadieron $${monto.toLocaleString()} al usuario.`);
-            
-            // Actualizar la lista
             document.getElementById(`sol_${idRecarga}`)?.remove();
             cargarSolicitudesRecarga();
             
-            // Si el usuario actual es el que recibió la recarga, actualizar su saldo visible
             if (usuarioActual && usuarioActual.id === idUsuario) {
                 usuarioActual.saldo = nuevoSaldo;
                 actualizarUsuarioCard();
                 await cargarMisApuestas();
             }
-            
             await cargarDatosGlobales();
-            
         } catch (err) {
             alert('❌ Error: ' + err.message);
         }
     };
     
     window.rechazarRecarga = async function(idRecarga) {
-        const confirmar = confirm('❌ ¿Rechazar esta solicitud de recarga?');
+        const confirmar = confirm('❌ ¿Rechazar esta solicitud?');
         if (!confirmar) return;
         
-        try {
-            const { error } = await db.from('recargas').update({ estado: 'rechazado' }).eq('id', idRecarga);
-            if (error) throw new Error(error.message);
-            
-            alert('✅ Recarga rechazada');
-            document.getElementById(`sol_${idRecarga}`)?.remove();
-            cargarSolicitudesRecarga();
-            
-        } catch (err) {
-            alert('❌ Error: ' + err.message);
-        }
+        await db.from('recargas').update({ estado: 'rechazado' }).eq('id', idRecarga);
+        alert('✅ Recarga rechazada');
+        document.getElementById(`sol_${idRecarga}`)?.remove();
+        cargarSolicitudesRecarga();
     };
     
-    // ============ RECARGAS PARA USUARIOS ============
+    // ============ RECARGAS USUARIO ============
     function mostrarModalPago() {
         const medio = document.getElementById('medioPago').value;
-        if (medio === 'nequi') {
-            document.getElementById('datosPago').innerHTML = '🔑 Nequi llave: <strong>0091030441</strong><br><br>💬 Después de consignar, confirma con el administrador.';
-        } else {
-            document.getElementById('datosPago').innerHTML = '🏦 Bancolombia: <strong>26269998309</strong><br><br>💬 Después de consignar, confirma con el administrador.';
-        }
+        document.getElementById('datosPago').innerHTML = medio === 'nequi' ? '🔑 Nequi: 0091030441' : '🏦 Bancolombia: 26269998309';
         document.getElementById('modalPago').style.display = 'flex';
-        document.getElementById('montoRecarga').value = '';
-        document.getElementById('montoRecarga').focus();
     }
     
     async function solicitarRecarga() {
         const monto = parseInt(document.getElementById('montoRecarga').value);
         const medioPago = document.getElementById('medioPago').value;
         
-        if (!monto || isNaN(monto)) {
-            alert('❌ Por favor ingrese un monto válido');
-            document.getElementById('montoRecarga').focus();
-            return;
-        }
+        if (!monto || monto < 5000) { alert('Mínimo $5,000'); return; }
+        if (monto % 5000 !== 0) { alert('Monto múltiplo de $5,000'); return; }
         
-        if (monto < 5000) {
-            alert('❌ El monto mínimo de recarga es $5,000');
-            document.getElementById('montoRecarga').focus();
-            return;
-        }
+        await db.from('recargas').insert({
+            id: Date.now().toString(),
+            usuario_id: usuarioActual.id,
+            monto: monto,
+            medio_pago: medioPago,
+            estado: 'verificando',
+            fecha: new Date()
+        });
         
-        if (monto % 5000 !== 0) {
-            alert('❌ El monto debe ser múltiplo de $5,000 (5,000, 10,000, 15,000, etc.)');
-            document.getElementById('montoRecarga').focus();
-            return;
-        }
-        
-        if (!usuarioActual) {
-            alert('❌ Debes registrarte primero');
-            return;
-        }
-        
-        const confirmar = confirm(`📋 Confirmar solicitud de recarga:\n\n💰 Monto: $${monto.toLocaleString()}\n📱 Medio: ${medioPago === 'nequi' ? 'Nequi' : 'Bancolombia'}\n\n¿Los datos son correctos?`);
-        if (!confirmar) return;
-        
-        try {
-            const { error } = await db.from('recargas').insert({
-                id: Date.now().toString(),
-                usuario_id: usuarioActual.id,
-                monto: monto,
-                medio_pago: medioPago,
-                estado: 'verificando',
-                fecha: new Date()
-            });
-            
-            if (error) {
-                alert('❌ Error al solicitar recarga: ' + error.message);
-                return;
-            }
-            
-            alert(`✅ ¡Solicitud enviada con éxito!\n\n💰 Monto: $${monto.toLocaleString()}\n\n⏳ El administrador verificará y acreditará tu saldo en breve.`);
-            cerrarModal();
-            
-        } catch (err) {
-            alert('❌ Error: ' + err.message);
-        }
+        alert('✅ Solicitud enviada. El administrador acreditará tu saldo.');
+        cerrarModal();
     }
     
-    function cerrarModal() { 
-        document.getElementById('modalPago').style.display = 'none'; 
-        document.getElementById('montoRecarga').value = '';
-    }
+    function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
     
     // ============ ADMIN PANEL ============
     function abrirAdmin() {
@@ -804,8 +887,7 @@
     }
     
     document.getElementById('btnVerificarPass').onclick = async function() {
-        const pass = document.getElementById('adminPassword').value;
-        if (pass === ADMIN_PASSWORD) {
+        if (document.getElementById('adminPassword').value === ADMIN_PASSWORD) {
             document.getElementById('modalPassword').style.display = 'none';
             document.getElementById('adminPanel').style.display = 'block';
             document.getElementById('adminBtn').style.display = 'none';
@@ -813,25 +895,20 @@
             await cargarSolicitudesRecarga();
         } else {
             alert('❌ Contraseña incorrecta');
-            document.getElementById('adminPassword').value = '';
-            document.getElementById('adminPassword').focus();
         }
     };
     
-    document.getElementById('btnCancelarPass').onclick = function() {
+    document.getElementById('btnCancelarPass').onclick = () => {
         document.getElementById('modalPassword').style.display = 'none';
         document.getElementById('adminPassword').value = '';
     };
     
-    document.getElementById('adminPassword').onkeypress = function(e) {
-        if (e.key === 'Enter') {
-            document.getElementById('btnVerificarPass').click();
-        }
+    document.getElementById('btnCerrarAdmin').onclick = () => {
+        document.getElementById('adminPanel').style.display = 'none';
+        document.getElementById('adminBtn').style.display = 'flex';
     };
     
-    document.getElementById('btnActualizarRecargas').onclick = async function() {
-        await cargarSolicitudesRecarga();
-    };
+    document.getElementById('btnActualizarRecargas').onclick = cargarSolicitudesRecarga;
     
     async function verPozo() {
         const { data: apuestas } = await db.from('apuestas').select('monto');
@@ -841,13 +918,9 @@
     
     async function verUsuarios() {
         const { data: usuarios } = await db.from('usuarios').select('nombre, saldo, celular').order('saldo', { ascending: false });
-        if (!usuarios || usuarios.length === 0) {
-            alert('No hay usuarios registrados');
-            return;
-        }
-        let mensaje = '📋 USUARIOS REGISTRADOS:\n\n';
-        usuarios.forEach((u, i) => {
-            mensaje += `${i+1}. ${u.nombre}\n   💰 Saldo: $${u.saldo.toLocaleString()}\n   📱 ${u.celular}\n\n`;
+        let mensaje = '📋 USUARIOS:\n\n';
+        usuarios?.forEach((u, i) => {
+            mensaje += `${i+1}. ${u.nombre}\n   💰 $${u.saldo.toLocaleString()}\n   📱 ${u.celular}\n\n`;
         });
         alert(mensaje);
     }
@@ -858,40 +931,21 @@
     document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
     document.getElementById('btnCerrarModal').onclick = cerrarModal;
     document.getElementById('adminBtn').onclick = abrirAdmin;
-    document.getElementById('btnCerrarAdmin').onclick = () => {
-        document.getElementById('adminPanel').style.display = 'none';
-        document.getElementById('adminBtn').style.display = 'flex';
-    };
-    document.getElementById('btnCerrarPartido').onclick = () => {
-        const id = parseInt(document.getElementById('adminPartido').value);
-        const gL = parseInt(document.getElementById('adminGolL').value);
-        const gV = parseInt(document.getElementById('adminGolV').value);
-        if (isNaN(gL) || isNaN(gV)) alert('Ingresa el resultado');
-        else window.cerrarPartido(id, gL, gV);
-        document.getElementById('adminGolL').value = '';
-        document.getElementById('adminGolV').value = '';
-    };
     document.getElementById('btnVerPozo').onclick = verPozo;
     document.getElementById('btnVerUsuarios').onclick = verUsuarios;
     
-    document.getElementById('montoRecarga').onkeypress = function(e) {
-        if (e.key === 'Enter') {
-            document.getElementById('btnSolicitarRecarga').click();
-        }
-    };
-    
     // ============ INICIAR ============
-    window.onload = () => {
-        console.log("🚀 App iniciada - Contraseña admin: admin123");
+    window.onload = async () => {
+        console.log("🚀 Mundial 2026 - Versión Mejorada");
         const guardado = localStorage.getItem('usuario');
         if (guardado) {
             usuarioActual = JSON.parse(guardado);
             document.getElementById('panelRegistro').classList.add('oculto');
             document.getElementById('panelPrincipal').classList.remove('oculto');
             actualizarUsuarioCard();
-            cargarDatosGlobales();
-            cargarPartidos();
-            cargarMisApuestas();
+            await cargarDatosGlobales();
+            await cargarPartidos();
+            await cargarMisApuestas();
         }
     };
 </script>
