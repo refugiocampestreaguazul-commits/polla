@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 Mundial 2026 - Calendario FIFA</title>
+    <title>🏆 Mundial 2026 - Pozo Acumulativo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,14 +52,36 @@
             border: none;
         }
         button:hover { transform: scale(1.02); background: #ffed4a; }
-        .saldo-box {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stat-number { font-size: 2em; font-weight: bold; color: #1a472a; }
+        .pozo-box {
             background: linear-gradient(135deg, #ffd700, #ffed4a);
             padding: 20px;
             border-radius: 15px;
             text-align: center;
             margin-bottom: 20px;
         }
-        .saldo-monto { font-size: 2.5em; font-weight: bold; color: #1a472a; }
+        .pozo-monto { font-size: 2.5em; font-weight: bold; color: #1a472a; }
+        .saldo-box {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
         .partidos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -90,15 +112,6 @@
             text-align: center;
             font-size: 20px;
             font-weight: bold;
-        }
-        .costo-fijo {
-            background: #e8f5e9;
-            padding: 8px;
-            border-radius: 5px;
-            text-align: center;
-            margin: 10px 0;
-            font-weight: bold;
-            color: #2e7d32;
         }
         .apuesta-item {
             background: #f9f9f9;
@@ -135,14 +148,7 @@
             width: 90%;
         }
         .btn-cerrar { background: #ccc !important; margin-top: 10px; }
-        .costo-badge {
-            background: #ffd700;
-            color: #1a472a;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
+        .highlight { background: #e8f5e9; border-radius: 8px; padding: 10px; margin: 10px 0; }
         @media (max-width: 768px) {
             .partidos-grid { grid-template-columns: 1fr; }
         }
@@ -152,8 +158,8 @@
 <div class="container">
     <div class="header">
         <h1>🏆 MUNDIAL 2026 🏆</h1>
-        <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Horario Colombia (UTC-5)</p>
-        <small style="color: #1a472a;">⚠️ Solo mayores de 18 años | Costo por partido: $5,000</small>
+        <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Pozo Acumulativo</p>
+        <small style="color: #1a472a;">⚠️ Solo mayores de 18 años | Cada apuesta: $5,000 | Premio: 90% del pozo</small>
     </div>
 
     <!-- Panel de Registro -->
@@ -167,28 +173,54 @@
             <option value="daviplata">Daviplata</option>
             <option value="cuenta">Cuenta de ahorros</option>
         </select>
-        <button id="btnRegistrar">🎯 Registrarse (Sin bono - Recarga mínima $5,000)</button>
+        <button id="btnRegistrar">🎯 Registrarse (Saldo inicial $0)</button>
         <p style="margin-top: 10px; font-size: 12px; color: #666;">Al registrarte aceptas participar en un juego social entre amigos. Cada apuesta cuesta $5,000.</p>
     </div>
 
-    <!-- Panel Principal (oculto al inicio) -->
+    <!-- Panel Principal -->
     <div id="panelPrincipal" style="display: none;">
-        <div class="saldo-box">
-            <div>💰 MI SALDO</div>
-            <div class="saldo-monto" id="saldo">$0</div>
-            <button id="btnRecargar" style="width: auto; padding: 10px 30px; margin-top: 10px;">➕ Recargar saldo (mín $5,000)</button>
+        <!-- POZO ACUMULATIVO -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>💰 POZO TOTAL</div>
+                <div class="stat-number" id="pozoTotal">$0</div>
+                <small>90% para ganadores</small>
+            </div>
+            <div class="stat-card">
+                <div>🏠 COMISIÓN (10%)</div>
+                <div class="stat-number" id="comisionTotal">$0</div>
+                <small>Administración</small>
+            </div>
+            <div class="stat-card">
+                <div>👥 JUGADORES</div>
+                <div class="stat-number" id="totalJugadores">0</div>
+            </div>
+            <div class="stat-card">
+                <div>🎯 APUESTAS</div>
+                <div class="stat-number" id="totalApuestas">0</div>
+            </div>
         </div>
 
+        <!-- Saldo personal -->
+        <div class="saldo-box">
+            <div>💰 MI SALDO</div>
+            <div class="pozo-monto" id="saldo">$0</div>
+            <button id="btnRecargar" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #ffd700; color: #1a472a;">➕ Recargar saldo (mín $5,000)</button>
+        </div>
+
+        <!-- Ranking -->
         <div class="card">
             <h2>🏆 RANKING DE GANADORES</h2>
             <div id="ranking">Cargando...</div>
         </div>
 
+        <!-- Partidos -->
         <div class="card">
             <h2>⚽ CALENDARIO OFICIAL FIFA 2026</h2>
             <div class="partidos-grid" id="partidosGrid"></div>
         </div>
 
+        <!-- Mis apuestas -->
         <div class="card">
             <h2>📋 MIS APUESTAS</h2>
             <div id="misApuestas"></div>
@@ -203,7 +235,7 @@
         <select id="medioPago">
             <option value="nequi">Nequi</option>
             <option value="daviplata">Daviplata</option>
-            <option value="cuenta">Cuenta de ahorros</option>
+            <option value="cuenta">Bancolombia</option>
         </select>
         <input type="number" id="montoRecarga" placeholder="Monto a recargar (mín $5,000)" min="5000" step="5000">
         <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: left;">
@@ -219,72 +251,32 @@
 <script>
     (function() {
         // ============ CONFIGURACIÓN - ¡PON TUS DATOS DE SUPABASE! ============
-        const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';  // <-- PON TU URL
-        const SUPABASE_ANON_KEY = 'TU_CLAVE_ANONIMA';           // <-- PON TU CLAVE
+        const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';  // <-- PON TU URL
+        const SUPABASE_ANON_KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';           // <-- PON TU CLAVE
         
-        const COSTO_POR_APUESTA = 5000;  // Cada partido cuesta $5,000
-        const MULTIPLICADOR_PREMIO = 5;   // Ganas 5x si aciertas (ganancia: $25,000)
+        const COSTO_POR_APUESTA = 5000;
+        const PORCENTAJE_CASA = 0.10;  // 10% para la casa
+        const PORCENTAJE_POZO = 0.90;   // 90% para ganadores
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let usuarioActual = null;
         let partidos = [];
         
-        // ============ CALENDARIO FIFA 2026 - HORA COLOMBIA (UTC-5) ============
+        // ============ CALENDARIO FIFA 2026 ============
         const calendarioOficial = [
-            // FASE DE GRUPOS - GRUPO A
-            { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A', estadio: 'El Campín - Bogotá' },
-            { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A', estadio: 'Metropolitano - Barranquilla' },
-            { id: 3, local: 'Colombia', visitante: 'Uruguay', fecha: '2026-06-18', hora: '16:00', grupo: 'Grupo A', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 4, local: 'Argentina', visitante: 'Brasil', fecha: '2026-06-18', hora: '20:00', grupo: 'Grupo A', estadio: 'Pascual Guerrero - Cali' },
-            { id: 5, local: 'Argentina', visitante: 'Uruguay', fecha: '2026-06-22', hora: '15:00', grupo: 'Grupo A', estadio: 'El Campín - Bogotá' },
-            { id: 6, local: 'Colombia', visitante: 'Brasil', fecha: '2026-06-22', hora: '19:00', grupo: 'Grupo A', estadio: 'Metropolitano - Barranquilla' },
-            
-            // FASE DE GRUPOS - GRUPO B
-            { id: 7, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 8, local: 'Alemania', visitante: 'Inglaterra', fecha: '2026-06-15', hora: '16:00', grupo: 'Grupo B', estadio: 'Pascual Guerrero - Cali' },
-            { id: 9, local: 'Francia', visitante: 'Inglaterra', fecha: '2026-06-19', hora: '14:00', grupo: 'Grupo B', estadio: 'El Campín - Bogotá' },
-            { id: 10, local: 'España', visitante: 'Alemania', fecha: '2026-06-19', hora: '18:00', grupo: 'Grupo B', estadio: 'Metropolitano - Barranquilla' },
-            { id: 11, local: 'España', visitante: 'Inglaterra', fecha: '2026-06-23', hora: '15:00', grupo: 'Grupo B', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 12, local: 'Francia', visitante: 'Alemania', fecha: '2026-06-23', hora: '19:00', grupo: 'Grupo B', estadio: 'Pascual Guerrero - Cali' },
-            
-            // FASE DE GRUPOS - GRUPO C
-            { id: 13, local: 'Portugal', visitante: 'Holanda', fecha: '2026-06-16', hora: '12:00', grupo: 'Grupo C', estadio: 'El Campín - Bogotá' },
-            { id: 14, local: 'Italia', visitante: 'Bélgica', fecha: '2026-06-16', hora: '16:00', grupo: 'Grupo C', estadio: 'Metropolitano - Barranquilla' },
-            { id: 15, local: 'Portugal', visitante: 'Bélgica', fecha: '2026-06-20', hora: '14:00', grupo: 'Grupo C', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 16, local: 'Holanda', visitante: 'Italia', fecha: '2026-06-20', hora: '18:00', grupo: 'Grupo C', estadio: 'Pascual Guerrero - Cali' },
-            { id: 17, local: 'Holanda', visitante: 'Bélgica', fecha: '2026-06-24', hora: '15:00', grupo: 'Grupo C', estadio: 'El Campín - Bogotá' },
-            { id: 18, local: 'Portugal', visitante: 'Italia', fecha: '2026-06-24', hora: '19:00', grupo: 'Grupo C', estadio: 'Metropolitano - Barranquilla' },
-            
-            // FASE DE GRUPOS - GRUPO D
-            { id: 19, local: 'México', visitante: 'Estados Unidos', fecha: '2026-06-17', hora: '14:00', grupo: 'Grupo D', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 20, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D', estadio: 'Pascual Guerrero - Cali' },
-            { id: 21, local: 'México', visitante: 'Corea del Sur', fecha: '2026-06-21', hora: '15:00', grupo: 'Grupo D', estadio: 'El Campín - Bogotá' },
-            { id: 22, local: 'Estados Unidos', visitante: 'Japón', fecha: '2026-06-21', hora: '19:00', grupo: 'Grupo D', estadio: 'Metropolitano - Barranquilla' },
-            { id: 23, local: 'Estados Unidos', visitante: 'Corea del Sur', fecha: '2026-06-25', hora: '15:00', grupo: 'Grupo D', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 24, local: 'México', visitante: 'Japón', fecha: '2026-06-25', hora: '19:00', grupo: 'Grupo D', estadio: 'Pascual Guerrero - Cali' },
-            
-            // OCTAVOS DE FINAL
-            { id: 25, local: '1A', visitante: '2B', fecha: '2026-06-28', hora: '13:00', grupo: 'Octavos', estadio: 'El Campín - Bogotá' },
-            { id: 26, local: '1B', visitante: '2A', fecha: '2026-06-28', hora: '17:00', grupo: 'Octavos', estadio: 'Metropolitano - Barranquilla' },
-            { id: 27, local: '1C', visitante: '2D', fecha: '2026-06-29', hora: '13:00', grupo: 'Octavos', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 28, local: '1D', visitante: '2C', fecha: '2026-06-29', hora: '17:00', grupo: 'Octavos', estadio: 'Pascual Guerrero - Cali' },
-            
-            // CUARTOS DE FINAL
-            { id: 29, local: 'Ganador O1', visitante: 'Ganador O2', fecha: '2026-07-03', hora: '14:00', grupo: 'Cuartos', estadio: 'El Campín - Bogotá' },
-            { id: 30, local: 'Ganador O3', visitante: 'Ganador O4', fecha: '2026-07-03', hora: '18:00', grupo: 'Cuartos', estadio: 'Metropolitano - Barranquilla' },
-            { id: 31, local: 'Ganador O5', visitante: 'Ganador O6', fecha: '2026-07-04', hora: '14:00', grupo: 'Cuartos', estadio: 'Atanasio Girardot - Medellín' },
-            { id: 32, local: 'Ganador O7', visitante: 'Ganador O8', fecha: '2026-07-04', hora: '18:00', grupo: 'Cuartos', estadio: 'Pascual Guerrero - Cali' },
-            
-            // SEMIFINALES
-            { id: 33, local: 'Ganador C1', visitante: 'Ganador C2', fecha: '2026-07-08', hora: '15:00', grupo: 'Semifinal', estadio: 'El Campín - Bogotá' },
-            { id: 34, local: 'Ganador C3', visitante: 'Ganador C4', fecha: '2026-07-09', hora: '15:00', grupo: 'Semifinal', estadio: 'Metropolitano - Barranquilla' },
-            
-            // FINAL
-            { id: 35, local: 'Ganador SF1', visitante: 'Ganador SF2', fecha: '2026-07-12', hora: '14:00', grupo: 'Final', estadio: 'El Campín - Bogotá' }
+            { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A' },
+            { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A' },
+            { id: 3, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B' },
+            { id: 4, local: 'Alemania', visitante: 'Inglaterra', fecha: '2026-06-15', hora: '16:00', grupo: 'Grupo B' },
+            { id: 5, local: 'Portugal', visitante: 'Holanda', fecha: '2026-06-16', hora: '12:00', grupo: 'Grupo C' },
+            { id: 6, local: 'Italia', visitante: 'Bélgica', fecha: '2026-06-16', hora: '16:00', grupo: 'Grupo C' },
+            { id: 7, local: 'México', visitante: 'Estados Unidos', fecha: '2026-06-17', hora: '14:00', grupo: 'Grupo D' },
+            { id: 8, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D' }
         ];
         
-        // ============ FUNCIÓN DE REGISTRO (SIN BONO) ============
+        // ============ FUNCIONES PRINCIPALES ============
+        
         async function registrar() {
             const nombre = document.getElementById('nombre').value;
             const email = document.getElementById('email').value;
@@ -306,13 +298,14 @@
                         nombre: nombre,
                         email: email,
                         celular: celular,
-                        saldo: 0,  // SIN BONO - Saldo inicial $0
+                        saldo: 0,
+                        total_ganado: 0,
                         medio_pago: medioPago,
                         fecha_registro: new Date()
                     }]);
                 
                 if (error) {
-                    alert('⚠️ Error de conexión: ' + error.message);
+                    alert('⚠️ Error: ' + error.message);
                     return;
                 }
                 
@@ -325,18 +318,70 @@
                 actualizarSaldo();
                 await cargarPartidos();
                 await cargarMisApuestas();
-                await cargarRanking();
+                await cargarDatosGlobales();
                 
-                alert(`✅ ¡Bienvenido ${nombre}!\n💰 Saldo inicial: $0\n🎯 Recarga mínimo $5,000 para empezar a apostar.`);
+                alert(`✅ ¡Bienvenido ${nombre}!\n💰 Saldo inicial: $0\n🎯 Recarga mínimo $5,000 para apostar.`);
                 
             } catch (err) {
-                alert('❌ Error al registrar: ' + err.message);
+                alert('❌ Error: ' + err.message);
             }
         }
         
-        // ============ CARGAR PARTIDOS (usa calendario oficial) ============
+        async function cargarDatosGlobales() {
+            // Obtener todas las apuestas
+            const { data: apuestas } = await _supabase
+                .from('apuestas')
+                .select('monto, estado');
+            
+            if (!apuestas) return;
+            
+            // Calcular pozo total (suma de todas las apuestas)
+            const pozoBruto = apuestas.reduce((sum, a) => sum + a.monto, 0);
+            const comision = pozoBruto * PORCENTAJE_CASA;
+            const pozoNeto = pozoBruto * PORCENTAJE_POZO;
+            
+            document.getElementById('pozoTotal').innerHTML = `$${pozoNeto.toLocaleString()}`;
+            document.getElementById('comisionTotal').innerHTML = `$${comision.toLocaleString()}`;
+            
+            // Total jugadores
+            const { count: totalJugadores } = await _supabase
+                .from('usuarios')
+                .select('*', { count: 'exact', head: true });
+            document.getElementById('totalJugadores').innerText = totalJugadores || 0;
+            
+            // Total apuestas
+            document.getElementById('totalApuestas').innerText = apuestas.length || 0;
+            
+            // Ranking
+            const { data: apuestasGanadas } = await _supabase
+                .from('apuestas')
+                .select('nombre_usuario, ganancia_recibida')
+                .eq('estado', 'ganada');
+            
+            const rankingMap = new Map();
+            apuestasGanadas?.forEach(a => {
+                rankingMap.set(a.nombre_usuario, (rankingMap.get(a.nombre_usuario) || 0) + (a.ganancia_recibida || 0));
+            });
+            
+            const ranking = Array.from(rankingMap.entries())
+                .map(([nombre, total]) => ({ nombre, total }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 10);
+            
+            const rankingDiv = document.getElementById('ranking');
+            if (ranking.length === 0) {
+                rankingDiv.innerHTML = '<p>Aún no hay ganadores</p>';
+            } else {
+                rankingDiv.innerHTML = ranking.map((r, i) => `
+                    <div class="ranking-item">
+                        <span>${i+1}. ${r.nombre}</span>
+                        <span>💰 $${r.total.toLocaleString()}</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
         async function cargarPartidos() {
-            // Verificar si hay partidos en Supabase, si no usar el calendario oficial
             const { data } = await _supabase.from('partidos').select('*');
             if (data && data.length > 0) {
                 partidos = data;
@@ -353,25 +398,23 @@
             grid.innerHTML = partidos.map(p => `
                 <div class="partido-card">
                     <div><strong>🏆 ${p.local} vs ${p.visitante}</strong></div>
-                    <div class="fecha-hora">
-                        📅 ${p.fecha} | 🕐 ${p.hora} (Hora Colombia)
-                    </div>
-                    <div style="font-size: 12px; color: #666;">${p.grupo} | ${p.estadio || 'Sede por definir'}</div>
-                    <div class="costo-fijo">
-                        💰 Costo fijo: $${COSTO_POR_APUESTA.toLocaleString()} | Premio: $${(COSTO_POR_APUESTA * MULTIPLICADOR_PREMIO).toLocaleString()}
+                    <div class="fecha-hora">📅 ${p.fecha} | 🕐 ${p.hora} (Hora Colombia)</div>
+                    <div style="font-size: 12px; color: #666;">${p.grupo}</div>
+                    <div class="highlight">
+                        💰 Costo: $${COSTO_POR_APUESTA.toLocaleString()} | Premio: 90% del pozo acumulado
                     </div>
                     <div class="marcador-inputs">
-                        <input type="number" id="goles_local_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; display:inline-block; margin-right:5%; text-align:center; font-size:20px;">
-                        <input type="number" id="goles_visitante_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; display:inline-block; text-align:center; font-size:20px;">
+                        <input type="number" id="goles_local_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;">
+                        <input type="number" id="goles_visitante_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;">
                     </div>
                     <button onclick="window.apostar(${p.id}, '${p.local}', '${p.visitante}')">
-                        ⚡ Apostar $${COSTO_POR_APUESTA.toLocaleString()} (Ganas $${(COSTO_POR_APUESTA * MULTIPLICADOR_PREMIO).toLocaleString()})
+                        ⚡ Apostar $${COSTO_POR_APUESTA.toLocaleString()}
                     </button>
                 </div>
             `).join('');
         }
         
-        // ============ APOSTAR (costo fijo $5,000) ============
+        // ============ APOSTAR ============
         window.apostar = async function(partidoId, local, visitante) {
             if (!usuarioActual) {
                 alert('Debes registrarte primero');
@@ -391,19 +434,21 @@
                 return;
             }
             
+            // Restar saldo al usuario
             const nuevoSaldo = usuarioActual.saldo - COSTO_POR_APUESTA;
             await _supabase.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuarioActual.id);
             usuarioActual.saldo = nuevoSaldo;
             
+            // Registrar apuesta (sin ganancia aún, se calculará al final)
             const { error } = await _supabase.from('apuestas').insert([{
                 id: Date.now().toString(),
                 usuario_id: usuarioActual.id,
                 nombre_usuario: usuarioActual.nombre,
                 partido: `${local} vs ${visitante}`,
+                partido_id: partidoId,
                 marcador_local: golesLocal,
                 marcador_visitante: golesVisitante,
                 monto: COSTO_POR_APUESTA,
-                ganancia: COSTO_POR_APUESTA * MULTIPLICADOR_PREMIO,
                 estado: 'pendiente',
                 fecha_apuesta: new Date()
             }]);
@@ -415,12 +460,106 @@
             
             actualizarSaldo();
             await cargarMisApuestas();
-            await cargarRanking();
+            await cargarDatosGlobales();
             
-            alert(`✅ Apuesta registrada!\n🎯 Pronóstico: ${golesLocal} - ${golesVisitante}\n💰 Si aciertas, ganas $${(COSTO_POR_APUESTA * MULTIPLICADOR_PREMIO).toLocaleString()}`);
+            alert(`✅ Apuesta registrada!\n🎯 Pronóstico: ${golesLocal} - ${golesVisitante}\n💰 Esperando resultado del partido.`);
             
             document.getElementById(`goles_local_${partidoId}`).value = '';
             document.getElementById(`goles_visitante_${partidoId}`).value = '';
+        };
+        
+        // ============ CERRAR PARTIDO Y REPARTIR PREMIOS ============
+        // Esta función la ejecuta el ADMIN cuando un partido termina
+        window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
+            // Obtener todas las apuestas de este partido
+            const { data: apuestasPartido } = await _supabase
+                .from('apuestas')
+                .select('*')
+                .eq('partido_id', partidoId)
+                .eq('estado', 'pendiente');
+            
+            if (!apuestasPartido || apuestasPartido.length === 0) {
+                alert('No hay apuestas para este partido');
+                return;
+            }
+            
+            // Encontrar ganadores (los que acertaron el marcador exacto)
+            const ganadores = apuestasPartido.filter(a => 
+                a.marcador_local === resultadoLocal && 
+                a.marcador_visitante === resultadoVisitante
+            );
+            
+            if (ganadores.length === 0) {
+                // Nadie ganó - todo el pozo se queda para próximos partidos
+                await _supabase
+                    .from('apuestas')
+                    .update({ estado: 'perdida' })
+                    .eq('partido_id', partidoId);
+                
+                alert(`❌ Nadie acertó el marcador ${resultadoLocal}-${resultadoVisitante}\n💰 El pozo se acumula para siguientes partidos.`);
+                return;
+            }
+            
+            // Calcular pozo de este partido
+            const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
+            const pozoGanadores = pozoPartido * PORCENTAJE_POZO;
+            const premioPorGanador = Math.floor(pozoGanadores / ganadores.length);
+            
+            // Actualizar cada ganador
+            for (const ganador of ganadores) {
+                // Sumar premio al saldo del usuario
+                const { data: usuario } = await _supabase
+                    .from('usuarios')
+                    .select('saldo')
+                    .eq('id', ganador.usuario_id)
+                    .single();
+                
+                const nuevoSaldo = (usuario?.saldo || 0) + premioPorGanador;
+                await _supabase
+                    .from('usuarios')
+                    .update({ saldo: nuevoSaldo })
+                    .eq('id', ganador.usuario_id);
+                
+                // Actualizar apuesta como ganada
+                await _supabase
+                    .from('apuestas')
+                    .update({ 
+                        estado: 'ganada', 
+                        ganancia_recibida: premioPorGanador,
+                        resultado_real_local: resultadoLocal,
+                        resultado_real_visitante: resultadoVisitante
+                    })
+                    .eq('id', ganador.id);
+            }
+            
+            // Marcar perdedores
+            await _supabase
+                .from('apuestas')
+                .update({ 
+                    estado: 'perdida',
+                    resultado_real_local: resultadoLocal,
+                    resultado_real_visitante: resultadoVisitante
+                })
+                .eq('partido_id', partidoId)
+                .neq('estado', 'ganada');
+            
+            alert(`✅ Partido finalizado!\n🎯 Resultado: ${resultadoLocal} - ${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Cada uno recibe: $${premioPorGanador.toLocaleString()}`);
+            
+            // Actualizar interfaces
+            if (usuarioActual) {
+                const { data: usuarioActualizado } = await _supabase
+                    .from('usuarios')
+                    .select('saldo')
+                    .eq('id', usuarioActual.id)
+                    .single();
+                if (usuarioActualizado) {
+                    usuarioActual.saldo = usuarioActualizado.saldo;
+                    actualizarSaldo();
+                }
+            }
+            
+            await cargarDatosGlobales();
+            await cargarMisApuestas();
         };
         
         // ============ MIS APUESTAS ============
@@ -445,57 +584,30 @@
                         <strong>${a.partido}</strong><br>
                         Tu pronóstico: ${a.marcador_local} - ${a.marcador_visitante}<br>
                         Apostaste: $${a.monto.toLocaleString()}
-                        ${a.estado === 'ganada' ? `<br>🎉 GANASTE: $${a.ganancia.toLocaleString()}` : ''}
+                        ${a.estado === 'ganada' ? `<br>🎉 GANASTE: $${(a.ganancia_recibida || 0).toLocaleString()}` : ''}
+                        ${a.resultado_real_local !== undefined ? `<br>📊 Resultado real: ${a.resultado_real_local} - ${a.resultado_real_visitante}` : ''}
                     </div>
-                    <div>${a.estado === 'pendiente' ? '⏳ Pendiente' : a.estado === 'ganada' ? '✅ Ganada' : '❌ Perdida'}</div>
+                    <div>
+                        ${a.estado === 'pendiente' ? '⏳ Pendiente' : a.estado === 'ganada' ? '✅ Ganada' : '❌ Perdida'}
+                    </div>
                 </div>
             `).join('');
         }
         
-        // ============ RANKING ============
-        async function cargarRanking() {
-            const { data } = await _supabase
-                .from('apuestas')
-                .select('nombre_usuario, ganancia')
-                .eq('estado', 'ganada');
-            
-            const container = document.getElementById('ranking');
-            const rankingMap = new Map();
-            data?.forEach(a => {
-                rankingMap.set(a.nombre_usuario, (rankingMap.get(a.nombre_usuario) || 0) + a.ganancia);
-            });
-            
-            const ranking = Array.from(rankingMap.entries())
-                .map(([nombre, total]) => ({ nombre, total }))
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 10);
-            
-            if (ranking.length === 0) {
-                container.innerHTML = '<p>Aún no hay ganadores</p>';
-            } else {
-                container.innerHTML = ranking.map((r, i) => `
-                    <div class="ranking-item">
-                        <span>${i+1}. ${r.nombre}</span>
-                        <span>💰 $${r.total.toLocaleString()}</span>
-                    </div>
-                `).join('');
-            }
-        }
-        
         // ============ RECARGAS ============
         function mostrarModalPago() {
-    const medio = document.getElementById('medioPago').value;
-    let datos = '';
-    if (medio === 'nequi') {
-        datos = '🔑 Nequi llave: <strong>0091030441</strong><br><br>📤 Envía tu comprobante a:<br>📱 WhatsApp: <a href="https://wa.me/573103415830" target="_blank">310 123 4567</a>';
-    } else if (medio === 'daviplata') {
-        datos = '⚠️ Daviplata no disponible. Usa Nequi o Bancolombia.';
-    } else {
-        datos = '🏦 Bancolombia: <strong>26269998309</strong><br><br>📤 Envía tu comprobante a:<br>📱 WhatsApp: <a href="https://wa.me/573103415830" target="_blank">310 123 4567</a>';
-    }
-    document.getElementById('datosPago').innerHTML = datos;
-    document.getElementById('modalPago').style.display = 'flex';
-}
+            const medio = document.getElementById('medioPago').value;
+            let datos = '';
+            if (medio === 'nequi') {
+                datos = '🔑 Nequi llave: <strong>0091030441</strong><br><br>📝 Después de consignar, confirma con el administrador.';
+            } else if (medio === 'daviplata') {
+                datos = '⚠️ Daviplata no disponible. Usa Nequi o Bancolombia.';
+            } else {
+                datos = '🏦 Bancolombia: <strong>26269998309</strong><br><br>📝 Después de consignar, confirma con el administrador.';
+            }
+            document.getElementById('datosPago').innerHTML = datos;
+            document.getElementById('modalPago').style.display = 'flex';
+        }
         
         async function solicitarRecarga() {
             const monto = parseInt(document.getElementById('montoRecarga').value);
@@ -537,19 +649,13 @@
         
         // ============ INICIALIZACIÓN ============
         window.onload = function() {
-            console.log("🚀 Mundial 2026 - Calendario FIFA Oficial");
+            console.log("🚀 Mundial 2026 - Pozo Acumulativo");
+            console.log("📌 Función admin: window.cerrarPartido(id, resultadoLocal, resultadoVisitante)");
             
-            const btnRegistrar = document.getElementById('btnRegistrar');
-            if (btnRegistrar) btnRegistrar.onclick = registrar;
-            
-            const btnRecargar = document.getElementById('btnRecargar');
-            if (btnRecargar) btnRecargar.onclick = mostrarModalPago;
-            
-            const btnSolicitar = document.getElementById('btnSolicitarRecarga');
-            if (btnSolicitar) btnSolicitar.onclick = solicitarRecarga;
-            
-            const btnCerrar = document.getElementById('btnCerrarModal');
-            if (btnCerrar) btnCerrar.onclick = cerrarModal;
+            document.getElementById('btnRegistrar').onclick = registrar;
+            document.getElementById('btnRecargar').onclick = mostrarModalPago;
+            document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
+            document.getElementById('btnCerrarModal').onclick = cerrarModal;
             
             const guardado = localStorage.getItem('usuario');
             if (guardado) {
@@ -559,7 +665,7 @@
                 actualizarSaldo();
                 cargarPartidos();
                 cargarMisApuestas();
-                cargarRanking();
+                cargarDatosGlobales();
             }
         };
     })();
