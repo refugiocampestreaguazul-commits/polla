@@ -18,21 +18,30 @@
             background: linear-gradient(135deg, #ffd700, #ffed4a);
             padding: 20px;
             border-radius: 15px;
-            text-align: center;
             margin-bottom: 20px;
             position: relative;
         }
-        .header h1 { color: #1a472a; font-size: 2em; }
-        .usuario-info {
+        .header h1 { color: #1a472a; font-size: 2em; text-align: center; }
+        .header p { text-align: center; }
+        .usuario-card {
             position: absolute;
             top: 15px;
             right: 20px;
             background: #1a472a;
             color: #ffd700;
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-align: right;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .usuario-card .nombre {
             font-size: 14px;
             font-weight: bold;
+        }
+        .usuario-card .saldo {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
         }
         .card {
             background: white;
@@ -77,13 +86,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .stat-number { font-size: 2em; font-weight: bold; color: #1a472a; }
-        .pozo-box {
-            background: linear-gradient(135deg, #ffd700, #ffed4a);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
         .saldo-box {
             background: linear-gradient(135deg, #4caf50, #45a049);
             padding: 20px;
@@ -192,16 +194,18 @@
         .admin-panel button { margin-top: 10px; }
         .close-btn { background: #ff4444 !important; color: white !important; }
         .oculto { display: none; }
-        .btn-cambiar {
-            background: #666;
-            color: white;
-            margin-top: 5px;
+        .btn-recargar {
+            background: #ffd700;
+            color: #1a472a;
+            width: auto;
+            padding: 8px 20px;
+            margin-top: 8px;
         }
-        .btn-cambiar:hover { background: #888; }
         @media (max-width: 768px) {
             .partidos-grid { grid-template-columns: 1fr; }
             .admin-panel { width: 90%; right: 5%; }
-            .usuario-info { font-size: 10px; top: 10px; right: 10px; }
+            .usuario-card { position: relative; top: 0; right: 0; margin-bottom: 15px; text-align: center; }
+            .header { padding-top: 80px; }
         }
     </style>
 </head>
@@ -211,21 +215,27 @@
         <h1>🏆 MUNDIAL 2026 🏆</h1>
         <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Pozo Acumulativo</p>
         <small>⚠️ Solo mayores de 18 años | Cada apuesta: $5,000</small>
-        <div id="usuarioInfo" class="usuario-info" style="display:none;"></div>
+        <div id="usuarioCard" class="usuario-card" style="display:none;"></div>
     </div>
 
     <!-- Panel de Registro -->
     <div id="panelRegistro" class="card">
         <h2>📝 Registro de Jugador</h2>
         <input type="text" id="nombre" placeholder="Nombre completo" required>
-        <input type="text" id="celular" placeholder="Celular" required>
+        <input type="email" id="email" placeholder="Correo electrónico">
+        <input type="tel" id="celular" placeholder="Celular" required>
+        <select id="medioPagoRegistro">
+            <option value="nequi">Nequi</option>
+            <option value="daviplata">Daviplata</option>
+            <option value="cuenta">Cuenta Bancolombia</option>
+        </select>
         <button id="btnRegistrar">🎯 Registrarse (Saldo $0)</button>
         <p style="margin-top: 10px; font-size: 12px; color: #666;">Al registrarte aceptas participar en un juego social entre amigos.</p>
     </div>
 
     <!-- Panel Principal -->
     <div id="panelPrincipal" class="oculto">
-        <!-- ESTADÍSTICAS GLOBALES (SIN COMISIÓN) -->
+        <!-- ESTADÍSTICAS GLOBALES -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div>💰 POZO TOTAL</div>
@@ -246,8 +256,7 @@
         <div class="saldo-box">
             <div>💰 MI SALDO</div>
             <div class="stat-number" id="saldo">$0</div>
-            <button id="btnRecargar" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #ffd700; color: #1a472a;">➕ Recargar (mín $5,000)</button>
-            <button id="btnCambiarUsuario" class="btn-cambiar" style="width: auto; padding: 10px 30px; margin-top: 10px;">🔄 Cambiar Usuario</button>
+            <button id="btnRecargar" class="btn-recargar">➕ Recargar saldo (mín $5,000)</button>
         </div>
 
         <!-- RANKING -->
@@ -337,10 +346,24 @@
         { id: 8, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D' }
     ];
     
+    // ============ ACTUALIZAR TARJETA DE USUARIO ============
+    function actualizarUsuarioCard() {
+        if (usuarioActual) {
+            const card = document.getElementById('usuarioCard');
+            card.style.display = 'block';
+            card.innerHTML = `
+                <div class="nombre">👤 ${usuarioActual.nombre}</div>
+                <div class="saldo">💰 $${(usuarioActual.saldo || 0).toLocaleString()}</div>
+            `;
+        }
+    }
+    
     // ============ REGISTRO ============
     async function registrar() {
         const nombre = document.getElementById('nombre').value;
+        const email = document.getElementById('email').value;
         const celular = document.getElementById('celular').value;
+        const medioPago = document.getElementById('medioPagoRegistro').value;
         
         if (!nombre || !celular) {
             alert('❌ Completa nombre y celular');
@@ -352,7 +375,9 @@
         const { error } = await db.from('usuarios').insert({
             id: usuarioId,
             nombre: nombre,
+            email: email,
             celular: celular,
+            medio_pago: medioPago,
             saldo: 0,
             fecha_registro: new Date()
         });
@@ -367,10 +392,8 @@
         
         document.getElementById('panelRegistro').classList.add('oculto');
         document.getElementById('panelPrincipal').classList.remove('oculto');
-        document.getElementById('usuarioInfo').style.display = 'block';
-        document.getElementById('usuarioInfo').innerHTML = `👤 ${nombre}`;
         
-        actualizarSaldo();
+        actualizarUsuarioCard();
         cargarDatosGlobales();
         cargarPartidos();
         cargarMisApuestas();
@@ -378,7 +401,7 @@
         alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
     }
     
-    // ============ DATOS GLOBALES (SIN COMISIÓN) ============
+    // ============ DATOS GLOBALES ============
     async function cargarDatosGlobales() {
         try {
             const { data: apuestas } = await db.from('apuestas').select('monto');
@@ -469,7 +492,7 @@
             fecha_apuesta: new Date()
         });
         
-        actualizarSaldo();
+        actualizarUsuarioCard();
         await cargarMisApuestas();
         await cargarDatosGlobales();
         
@@ -551,7 +574,7 @@
             const { data: updated } = await db.from('usuarios').select('saldo').eq('id', usuarioActual.id).single();
             if (updated) {
                 usuarioActual.saldo = updated.saldo;
-                actualizarSaldo();
+                actualizarUsuarioCard();
             }
             await cargarMisApuestas();
         }
@@ -585,18 +608,6 @@
     }
     
     function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
-    function actualizarSaldo() { document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo.toLocaleString()}`; }
-    
-    // ============ CAMBIAR USUARIO ============
-    function cambiarUsuario() {
-        localStorage.removeItem('usuario');
-        usuarioActual = null;
-        document.getElementById('panelPrincipal').classList.add('oculto');
-        document.getElementById('panelRegistro').classList.remove('oculto');
-        document.getElementById('usuarioInfo').style.display = 'none';
-        document.getElementById('nombre').value = '';
-        document.getElementById('celular').value = '';
-    }
     
     // ============ ADMIN PANEL ============
     function abrirAdmin() {
@@ -620,7 +631,6 @@
     document.getElementById('btnRecargar').onclick = mostrarModalPago;
     document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
     document.getElementById('btnCerrarModal').onclick = cerrarModal;
-    document.getElementById('btnCambiarUsuario').onclick = cambiarUsuario;
     document.getElementById('adminBtn').onclick = abrirAdmin;
     document.getElementById('btnCerrarAdmin').onclick = () => {
         document.getElementById('adminPanel').style.display = 'none';
@@ -644,9 +654,7 @@
             usuarioActual = JSON.parse(guardado);
             document.getElementById('panelRegistro').classList.add('oculto');
             document.getElementById('panelPrincipal').classList.remove('oculto');
-            document.getElementById('usuarioInfo').style.display = 'block';
-            document.getElementById('usuarioInfo').innerHTML = `👤 ${usuarioActual.nombre}`;
-            actualizarSaldo();
+            actualizarUsuarioCard();
             cargarDatosGlobales();
             cargarPartidos();
             cargarMisApuestas();
