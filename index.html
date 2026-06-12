@@ -426,34 +426,50 @@
     
     async function cargarPartidos() {
         try {
-            // Insertar partidos si no existen
-            const { data: existentes } = await db.from('partidos').select('id');
-            if (!existentes || existentes.length === 0) {
-                for (const p of partidosCompletos) {
-                    await db.from('partidos').upsert(p, { onConflict: 'id' });
-                }
+            const { data: partidos, error } = await db.from('partidos').select('*').order('fecha', { ascending: true }).order('hora', { ascending: true });
+            
+            if (error) throw error;
+            if (!partidos || partidos.length === 0) {
+                document.getElementById('partidosGrid').innerHTML = '<p>⚠️ No hay partidos cargados</p>';
+                return;
             }
             
-            const { data: partidos } = await db.from('partidos').select('*').order('fecha', { ascending: true });
-            const grid = document.getElementById('partidosGrid');
+            // Agrupar por jornada
+            const porJornada = {};
+            partidos.forEach(p => {
+                const j = p.grupo;
+                if (!porJornada[j]) porJornada[j] = [];
+                porJornada[j].push(p);
+            });
             
-            grid.innerHTML = partidos.map(p => {
-                const cerrado = p.estado === 'cerrado' || partidoCerrado(p.fecha, p.hora);
-                return `
-                    <div class="partido-card ${cerrado ? 'cerrado' : ''}">
-                        <div><strong>🏆 ${p.local} vs ${p.visitante}</strong></div>
-                        <div class="fecha-hora">📅 ${p.fecha} | 🕐 ${p.hora} (Hora Colombia)<span class="estado-partido ${cerrado ? 'estado-cerrado' : 'estado-abierto'}">${cerrado ? '🔒 Cerrado' : '📢 Abierto'}</span></div>
-                        <div style="font-size:12px;">${p.grupo}</div>
-                        ${p.resultado_local !== undefined ? `<div style="margin:8px 0; background:#e0e0e0; padding:5px; border-radius:5px;">📊 Resultado final: ${p.resultado_local} - ${p.resultado_visitante}</div>` : ''}
-                        <div class="marcador-inputs">
-                            <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
-                            <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
-                        </div>
-                        ${!cerrado ? `<button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>` : `<button disabled style="background:#ccc;">⏳ Partido finalizado</button>`}
+            const grid = document.getElementById('partidosGrid');
+            grid.innerHTML = Object.keys(porJornada).sort().map(jornada => `
+                <div style="margin-bottom: 30px;">
+                    <h3 style="background: #1a472a; color: #ffd700; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px;">📅 ${jornada}</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                        ${porJornada[jornada].map(p => {
+                            const cerrado = p.estado === 'cerrado' || partidoCerrado(p.fecha, p.hora);
+                            const esCol = p.local === 'Colombia' || p.visitante === 'Colombia';
+                            return `
+                                <div class="partido-card ${cerrado ? 'cerrado' : ''}">
+                                    <div><strong>🏆 ${p.local} vs ${p.visitante}</strong>${esCol ? '<span style="background:#ffd700;color:#1a472a;padding:2px 8px;border-radius:12px;font-size:10px;margin-left:8px;">🇨🇴 COLOMBIA</span>' : ''}</div>
+                                    <div class="fecha-hora">📅 ${p.fecha} | 🕐 ${p.hora}<span class="estado-partido ${cerrado ? 'estado-cerrado' : 'estado-abierto'}">${cerrado ? '🔒 Cerrado' : '📢 Abierto'}</span></div>
+                                    ${p.resultado_local !== undefined ? `<div style="margin:8px 0; background:#e0e0e0; padding:5px; border-radius:5px;">📊 Resultado: ${p.resultado_local} - ${p.resultado_visitante}</div>` : ''}
+                                    <div class="marcador-inputs">
+                                        <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
+                                        <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
+                                    </div>
+                                    ${!cerrado ? `<button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>` : `<button disabled style="background:#ccc;">⏳ Partido finalizado</button>`}
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
-                `;
-            }).join('');
-        } catch(e) { console.error(e); }
+                </div>
+            `).join('');
+        } catch(e) { 
+            console.error('Error:', e);
+            document.getElementById('partidosGrid').innerHTML = '<p>❌ Error al cargar los partidos</p>';
+        }
     }
     
     window.apostar = async function(id, local, visitante) {
