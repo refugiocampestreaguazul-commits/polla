@@ -11,6 +11,7 @@
         input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; font-size: 16px; }
         button { background: #ffd700; font-weight: bold; cursor: pointer; }
         .resultado { background: #e8f5e9; padding: 10px; margin-top: 10px; border-radius: 8px; display: none; }
+        .error { background: #ffebee; color: red; }
     </style>
 </head>
 <body>
@@ -26,25 +27,26 @@
 </div>
 
 <script>
-    console.log("✅ Script cargado correctamente");
-    
-    // Configuración de Supabase
+    // ============ URL CORRECTA ============
     const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';
     
+    console.log("URL:", SUPABASE_URL);
+    console.log("KEY:", SUPABASE_KEY.substring(0, 20) + "...");
+    
+    // Crear cliente
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("✅ Supabase inicializado");
+    console.log("✅ Cliente creado");
     
     // Función de registro
     async function registrarUsuario() {
-        console.log("🔵 Botón clickeado - Ejecutando registro...");
+        const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.style.display = 'block';
+        resultadoDiv.innerHTML = '🔄 Registrando...';
+        resultadoDiv.className = 'resultado';
         
         const nombre = document.getElementById('nombre').value;
         const celular = document.getElementById('celular').value;
-        const resultadoDiv = document.getElementById('resultado');
-        
-        resultadoDiv.style.display = 'block';
-        resultadoDiv.innerHTML = '🔄 Registrando...';
         
         if (!nombre || !celular) {
             resultadoDiv.innerHTML = '❌ Completa nombre y celular';
@@ -54,8 +56,6 @@
         const usuarioId = Date.now().toString();
         
         try {
-            console.log("Intentando insertar en Supabase...");
-            
             const { data, error } = await supabase
                 .from('usuarios')
                 .insert({
@@ -67,49 +67,29 @@
                 });
             
             if (error) {
-                console.error("Error de Supabase:", error);
                 resultadoDiv.innerHTML = '❌ Error: ' + error.message;
+                resultadoDiv.className = 'resultado error';
                 return;
             }
             
-            console.log("✅ Registro exitoso:", data);
             resultadoDiv.innerHTML = '✅ ¡Registro exitoso! Bienvenido ' + nombre;
+            resultadoDiv.className = 'resultado';
             
-            // Guardar en localStorage
-            const usuario = { id: usuarioId, nombre: nombre, saldo: 0 };
-            localStorage.setItem('usuario', JSON.stringify(usuario));
+            localStorage.setItem('usuario', JSON.stringify({ id: usuarioId, nombre: nombre, saldo: 0 }));
             
             setTimeout(() => {
-                alert('✅ Registro exitoso! Ahora recarga la página para continuar.');
+                alert('✅ Registro exitoso!');
             }, 500);
             
         } catch (err) {
-            console.error("Error:", err);
             resultadoDiv.innerHTML = '❌ Error: ' + err.message;
+            resultadoDiv.className = 'resultado error';
         }
     }
     
-    // Asignar evento al botón
-    const boton = document.getElementById('btnRegistrar');
-    if (boton) {
-        boton.onclick = registrarUsuario;
-        console.log("✅ Evento asignado al botón");
-    } else {
-        console.error("❌ No se encontró el botón");
-    }
-    
-    // Verificar la tabla en Supabase
-    async function verificarTabla() {
-        console.log("Verificando tabla usuarios...");
-        const { data, error } = await supabase.from('usuarios').select('count');
-        if (error) {
-            console.error("Error al verificar tabla:", error);
-        } else {
-            console.log("✅ Tabla usuarios existe");
-        }
-    }
-    
-    verificarTabla();
+    // Asignar evento
+    document.getElementById('btnRegistrar').onclick = registrarUsuario;
+    console.log("✅ Evento asignado");
 </script>
 </body>
 </html>
