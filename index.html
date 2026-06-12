@@ -296,7 +296,7 @@
     <button id="btnCerrarAdmin" class="close-btn">❌ CERRAR</button>
 </div>
 
-<!-- Modal de Contraseña ADMIN (enmascarada) -->
+<!-- Modal de Contraseña ADMIN -->
 <div id="modalPassword" class="modal">
     <div class="modal-content">
         <h3>🔐 ADMINISTRADOR</h3>
@@ -315,7 +315,7 @@
             <option value="nequi">Nequi</option>
             <option value="cuenta">Bancolombia</option>
         </select>
-        <input type="number" id="montoRecarga" placeholder="Monto mínimo $5,000" min="5000">
+        <input type="number" id="montoRecarga" placeholder="Monto mínimo $5,000" min="5000" step="5000">
         <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0;">
             <p><strong>📱 Datos para consignar:</strong></p>
             <p id="datosPago"></p>
@@ -356,9 +356,11 @@
                 <div class="nombre">👤 ${usuarioActual.nombre}</div>
                 <div class="saldo">💰 $${(usuarioActual.saldo || 0).toLocaleString()}</div>
             `;
+            document.getElementById('saldo').innerHTML = `$${(usuarioActual.saldo || 0).toLocaleString()}`;
         }
     }
     
+    // ============ REGISTRO ============
     async function registrar() {
         const nombre = document.getElementById('nombre').value;
         const email = document.getElementById('email').value;
@@ -401,6 +403,7 @@
         alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
     }
     
+    // ============ DATOS GLOBALES ============
     async function cargarDatosGlobales() {
         try {
             const { data: apuestas } = await db.from('apuestas').select('monto');
@@ -432,6 +435,7 @@
         } catch (e) { console.error(e); }
     }
     
+    // ============ PARTIDOS ============
     async function cargarPartidos() {
         let partidos = partidosLista;
         try {
@@ -453,6 +457,7 @@
         `).join('');
     }
     
+    // ============ APOSTAR ============
     window.apostar = async function(id, local, visitante) {
         if (!usuarioActual) { alert('Regístrate primero'); return; }
         
@@ -496,6 +501,7 @@
         document.getElementById(`golV_${id}`).value = '';
     };
     
+    // ============ MIS APUESTAS ============
     async function cargarMisApuestas() {
         if (!usuarioActual) return;
         
@@ -523,6 +529,7 @@
         `).join('');
     }
     
+    // ============ ADMIN: CERRAR PARTIDO ============
     window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
         const { data: apuestasPartido } = await db.from('apuestas')
             .select('*')
@@ -571,34 +578,84 @@
         await cargarDatosGlobales();
     };
     
+    // ============ RECARGAS CON VALIDACIÓN ============
     function mostrarModalPago() {
         const medio = document.getElementById('medioPago').value;
-        document.getElementById('datosPago').innerHTML = medio === 'nequi' ? '🔑 Nequi: 0091030441' : '🏦 Bancolombia: 26269998309';
+        if (medio === 'nequi') {
+            document.getElementById('datosPago').innerHTML = '🔑 Nequi llave: <strong>0091030441</strong><br><br>💬 Después de consignar, confirma con el administrador.';
+        } else {
+            document.getElementById('datosPago').innerHTML = '🏦 Bancolombia: <strong>26269998309</strong><br><br>💬 Después de consignar, confirma con el administrador.';
+        }
         document.getElementById('modalPago').style.display = 'flex';
+        document.getElementById('montoRecarga').value = '';
+        document.getElementById('montoRecarga').focus();
     }
     
     async function solicitarRecarga() {
         const monto = parseInt(document.getElementById('montoRecarga').value);
-        if (!monto || monto < 5000) {
-            alert('El monto mínimo es $5,000');
+        const medioPago = document.getElementById('medioPago').value;
+        
+        // VALIDACIONES
+        if (!monto || isNaN(monto)) {
+            alert('❌ Por favor ingrese un monto válido');
+            document.getElementById('montoRecarga').focus();
             return;
         }
         
-        await db.from('recargas').insert({
-            id: Date.now().toString(),
-            usuario_id: usuarioActual.id,
-            monto: monto,
-            medio_pago: document.getElementById('medioPago').value,
-            estado: 'verificando'
-        });
+        if (monto < 5000) {
+            alert('❌ El monto mínimo de recarga es $5,000');
+            document.getElementById('montoRecarga').focus();
+            return;
+        }
         
-        alert('✅ Solicitud enviada. Un administrador verificará y acreditará tu saldo.');
-        cerrarModal();
+        if (monto % 5000 !== 0) {
+            alert('❌ El monto debe ser múltiplo de $5,000 (5,000, 10,000, 15,000, etc.)');
+            document.getElementById('montoRecarga').focus();
+            return;
+        }
+        
+        if (!usuarioActual) {
+            alert('❌ Debes registrarte primero');
+            return;
+        }
+        
+        // Confirmar recarga
+        const confirmar = confirm(`📋 Confirmar solicitud de recarga:\n\n💰 Monto: $${monto.toLocaleString()}\n📱 Medio: ${medioPago === 'nequi' ? 'Nequi' : 'Bancolombia'}\n\n¿Los datos son correctos?`);
+        
+        if (!confirmar) {
+            return;
+        }
+        
+        try {
+            const { error } = await db.from('recargas').insert({
+                id: Date.now().toString(),
+                usuario_id: usuarioActual.id,
+                monto: monto,
+                medio_pago: medioPago,
+                estado: 'verificando',
+                fecha: new Date()
+            });
+            
+            if (error) {
+                alert('❌ Error al solicitar recarga: ' + error.message);
+                return;
+            }
+            
+            alert(`✅ ¡Solicitud enviada con éxito!\n\n💰 Monto: $${monto.toLocaleString()}\n📱 Medio: ${medioPago === 'nequi' ? 'Nequi' : 'Bancolombia'}\n\n⏳ El administrador verificará y acreditará tu saldo en breve.`);
+            
+            cerrarModal();
+            
+        } catch (err) {
+            alert('❌ Error: ' + err.message);
+        }
     }
     
-    function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
+    function cerrarModal() { 
+        document.getElementById('modalPago').style.display = 'none'; 
+        document.getElementById('montoRecarga').value = '';
+    }
     
-    // === ADMIN CON CONTRASEÑA ENMASCARADA ===
+    // ============ ADMIN PANEL ============
     function abrirAdmin() {
         document.getElementById('modalPassword').style.display = 'flex';
         document.getElementById('adminPassword').focus();
@@ -623,7 +680,6 @@
         document.getElementById('adminPassword').value = '';
     };
     
-    // Permitir Enter en el campo de contraseña
     document.getElementById('adminPassword').onkeypress = function(e) {
         if (e.key === 'Enter') {
             document.getElementById('btnVerificarPass').click();
@@ -636,7 +692,7 @@
         alert(`💰 POZO TOTAL: $${total.toLocaleString()}`);
     }
     
-    // EVENTOS
+    // ============ EVENTOS ============
     document.getElementById('btnRegistrar').onclick = registrar;
     document.getElementById('btnRecargar').onclick = mostrarModalPago;
     document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
@@ -657,6 +713,14 @@
     };
     document.getElementById('btnVerPozo').onclick = verPozo;
     
+    // Permitir Enter en el campo de monto de recarga
+    document.getElementById('montoRecarga').onkeypress = function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('btnSolicitarRecarga').click();
+        }
+    };
+    
+    // ============ INICIAR ============
     window.onload = () => {
         console.log("🚀 App iniciada - Contraseña admin: admin123");
         const guardado = localStorage.getItem('usuario');
