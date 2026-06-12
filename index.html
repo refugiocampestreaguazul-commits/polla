@@ -78,9 +78,17 @@
             color: white;
             display: none;
             border: 1px solid #ffd700;
+            z-index: 1000;
         }
         .admin-panel input, .admin-panel select { margin: 5px 0; }
         .oculto { display: none; }
+        .visible { display: block; }
+        .btn-salir {
+            background: #ff4444;
+            color: white;
+            margin-top: 10px;
+        }
+        .texto-pequeno { font-size: 12px; color: #666; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -96,6 +104,7 @@
         <input type="text" id="nombre" placeholder="Nombre completo">
         <input type="text" id="celular" placeholder="Celular">
         <button id="btnRegistrar">🎯 Registrarse (Saldo $0)</button>
+        <div class="texto-pequeno">⚠️ Solo mayores de 18 años | Juego social entre amigos</div>
     </div>
 
     <!-- Panel Principal -->
@@ -104,6 +113,7 @@
             <h2>💰 MI SALDO</h2>
             <div class="saldo" id="saldo">$0</div>
             <button id="btnRecargar">➕ Recargar (mín $5,000)</button>
+            <button id="btnCambiarUsuario" style="background:#ccc; margin-top:5px;">🔄 Cambiar de usuario</button>
         </div>
 
         <div class="card">
@@ -131,7 +141,7 @@
     <input type="number" id="adminGolL" placeholder="Goles Local">
     <input type="number" id="adminGolV" placeholder="Goles Visitante">
     <button id="btnCerrarPartido">✅ Cerrar Partido</button>
-    <button id="btnCerrarAdmin">❌ Cerrar</button>
+    <button id="btnCerrarAdmin" class="btn-salir">❌ Cerrar</button>
 </div>
 
 <script>
@@ -150,7 +160,7 @@
     ];
     
     // ============ REGISTRO ============
-    document.getElementById('btnRegistrar').onclick = async () => {
+    async function registrarUsuario() {
         const nombre = document.getElementById('nombre').value;
         const celular = document.getElementById('celular').value;
         
@@ -184,8 +194,18 @@
         cargarPartidos();
         cargarMisApuestas();
         
-        alert(`✅ ¡Bienvenido ${nombre}!`);
-    };
+        alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
+    }
+    
+    // ============ CAMBIAR DE USUARIO ============
+    function cambiarUsuario() {
+        localStorage.removeItem('usuario');
+        usuario = null;
+        document.getElementById('panelPrincipal').classList.add('oculto');
+        document.getElementById('panelRegistro').classList.remove('oculto');
+        document.getElementById('nombre').value = '';
+        document.getElementById('celular').value = '';
+    }
     
     // ============ PARTIDOS ============
     function cargarPartidos() {
@@ -194,9 +214,9 @@
                 <strong>🏆 ${p.local} vs ${p.visitante}</strong><br>
                 <small>📅 ${p.fecha}</small>
                 <div class="marcador-inputs">
-                    <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0">
+                    <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" value="">
                     <span>-</span>
-                    <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0">
+                    <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" value="">
                 </div>
                 <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $5,000</button>
             </div>
@@ -278,12 +298,16 @@
         alert('🔑 Nequi: 0091030441\n🏦 Bancolombia: 26269998309\n\nDespués de consignar, el admin acreditará tu saldo.');
     };
     
+    document.getElementById('btnCambiarUsuario').onclick = cambiarUsuario;
+    
     // ============ ADMIN ============
     document.getElementById('adminBtn').onclick = () => {
         const pass = prompt('Contraseña:');
         if (pass === 'admin2026') {
             document.getElementById('adminPanel').style.display = 'block';
             document.getElementById('adminBtn').style.display = 'none';
+        } else {
+            alert('Contraseña incorrecta');
         }
     };
     
@@ -306,8 +330,6 @@
         
         document.getElementById('adminGolL').value = '';
         document.getElementById('adminGolV').value = '';
-        document.getElementById('adminPanel').style.display = 'none';
-        document.getElementById('adminBtn').style.display = 'flex';
     };
     
     // ============ CERRAR PARTIDO ============
@@ -356,16 +378,23 @@
     
     // ============ VERIFICAR SESIÓN ============
     window.onload = () => {
+        console.log("🚀 App iniciada");
         const guardado = localStorage.getItem('usuario');
         if (guardado) {
             usuario = JSON.parse(guardado);
             document.getElementById('panelRegistro').classList.add('oculto');
             document.getElementById('panelPrincipal').classList.remove('oculto');
-            document.getElementById('saldo').innerHTML = `$${usuario.saldo}`;
+            document.getElementById('saldo').innerHTML = `$${usuario.saldo || 0}`;
             cargarPartidos();
             cargarMisApuestas();
+        } else {
+            document.getElementById('panelRegistro').classList.remove('oculto');
+            document.getElementById('panelPrincipal').classList.add('oculto');
         }
     };
+    
+    // Asignar evento de registro
+    document.getElementById('btnRegistrar').onclick = registrarUsuario;
 </script>
 </body>
 </html>
