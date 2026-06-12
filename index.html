@@ -275,16 +275,17 @@
 
 <script>
     // ============ CONFIGURACIÓN ============
-    const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';
-    const ADMIN_PASSWORD = 'admin2026';
-    const COSTO_APUESTA = 5000;
+    const PROYECTO_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
+    const LLAVE_PUBLICA = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';
+    const CLAVE_ADMIN = 'admin2026';
+    const PRECIO_APUESTA = 5000;
     
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let usuarioActual = null;
+    // Cliente de Supabase - usando variable única
+    const db = supabase.createClient(PROYECTO_URL, LLAVE_PUBLICA);
+    let usuario = null;
     
-    // Lista de partidos por si no hay en BD
-    const partidosLocal = [
+    // Partidos por defecto
+    const listaPartidos = [
         { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A' },
         { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A' },
         { id: 3, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B' },
@@ -296,7 +297,7 @@
     ];
     
     // ============ REGISTRO ============
-    async function registrar() {
+    function registrarUsuario() {
         const nombre = document.getElementById('nombre').value;
         const email = document.getElementById('email').value;
         const celular = document.getElementById('celular').value;
@@ -307,62 +308,55 @@
             return;
         }
         
-        const usuarioId = Date.now().toString();
+        const idUsuario = Date.now().toString();
         
-        try {
-            const { error } = await supabase
-                .from('usuarios')
-                .insert({
-                    id: usuarioId,
-                    nombre: nombre,
-                    email: email,
-                    celular: celular,
-                    saldo: 0,
-                    medio_pago: medioPago,
-                    fecha_registro: new Date().toISOString()
-                });
-            
-            if (error) {
-                alert('Error: ' + error.message);
+        db.from('usuarios').insert({
+            id: idUsuario,
+            nombre: nombre,
+            email: email,
+            celular: celular,
+            saldo: 0,
+            medio_pago: medioPago,
+            fecha_registro: new Date().toISOString()
+        }).then(respuesta => {
+            if (respuesta.error) {
+                alert('Error: ' + respuesta.error.message);
                 return;
             }
             
-            usuarioActual = { id: usuarioId, nombre: nombre, saldo: 0 };
-            localStorage.setItem('usuario', JSON.stringify(usuarioActual));
+            usuario = { id: idUsuario, nombre: nombre, saldo: 0 };
+            localStorage.setItem('usuario', JSON.stringify(usuario));
             
             document.getElementById('panelRegistro').style.display = 'none';
             document.getElementById('panelPrincipal').style.display = 'block';
             
-            actualizarSaldo();
-            cargarDatos();
+            mostrarSaldo();
+            cargarEstadisticas();
             cargarPartidos();
             cargarMisApuestas();
             
             alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
-            
-        } catch (err) {
+        }).catch(err => {
             alert('Error: ' + err.message);
-        }
+        });
     }
     
-    async function cargarDatos() {
+    async function cargarEstadisticas() {
         try {
-            const { data: apuestas } = await supabase.from('apuestas').select('monto');
-            const total = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
-            document.getElementById('pozoTotal').innerHTML = `$${total.toLocaleString()}`;
+            const { data: apuestas } = await db.from('apuestas').select('monto');
+            const totalPozo = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
+            document.getElementById('pozoTotal').innerHTML = `$${totalPozo.toLocaleString()}`;
             
-            const { count: jugadores } = await supabase.from('usuarios').select('*', { count: 'exact', head: true });
-            document.getElementById('totalJugadores').innerText = jugadores || 0;
+            const { count: totalJugadores } = await db.from('usuarios').select('*', { count: 'exact', head: true });
+            document.getElementById('totalJugadores').innerText = totalJugadores || 0;
             document.getElementById('totalApuestas').innerText = apuestas?.length || 0;
         } catch (e) { console.log(e); }
     }
     
     async function cargarPartidos() {
         try {
-            let partidos = partidosLocal;
-            
-            // Intentar cargar desde BD
-            const { data } = await supabase.from('partidos').select('*');
+            let partidos = listaPartidos;
+            const { data } = await db.from('partidos').select('*');
             if (data && data.length > 0) {
                 partidos = data;
             }
@@ -375,41 +369,41 @@
                         <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10">
                         <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10">
                     </div>
-                    <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA}</button>
+                    <button onclick="hacerApuesta(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${PRECIO_APUESTA}</button>
                 </div>
             `).join('');
         } catch (e) { console.log(e); }
     }
     
-    window.apostar = async function(id, local, visitante) {
-        if (!usuarioActual) { alert('Regístrate primero'); return; }
+    window.hacerApuesta = async function(id, local, visitante) {
+        if (!usuario) { alert('Regístrate primero'); return; }
         
         const golesL = parseInt(document.getElementById(`golL_${id}`).value);
         const golesV = parseInt(document.getElementById(`golV_${id}`).value);
         
         if (isNaN(golesL) || isNaN(golesV)) { alert('Ingresa el marcador'); return; }
-        if (usuarioActual.saldo < COSTO_APUESTA) { alert('Saldo insuficiente'); return; }
+        if (usuario.saldo < PRECIO_APUESTA) { alert('Saldo insuficiente'); return; }
         
-        const nuevoSaldo = usuarioActual.saldo - COSTO_APUESTA;
-        await supabase.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuarioActual.id);
-        usuarioActual.saldo = nuevoSaldo;
+        const nuevoSaldo = usuario.saldo - PRECIO_APUESTA;
+        await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuario.id);
+        usuario.saldo = nuevoSaldo;
         
-        await supabase.from('apuestas').insert({
+        await db.from('apuestas').insert({
             id: Date.now().toString(),
-            usuario_id: usuarioActual.id,
-            nombre_usuario: usuarioActual.nombre,
+            usuario_id: usuario.id,
+            nombre_usuario: usuario.nombre,
             partido: `${local} vs ${visitante}`,
             partido_id: id,
             marcador_local: golesL,
             marcador_visitante: golesV,
-            monto: COSTO_APUESTA,
+            monto: PRECIO_APUESTA,
             estado: 'pendiente',
             fecha_apuesta: new Date().toISOString()
         });
         
-        actualizarSaldo();
+        mostrarSaldo();
         cargarMisApuestas();
-        cargarDatos();
+        cargarEstadisticas();
         alert('✅ Apuesta registrada!');
         
         document.getElementById(`golL_${id}`).value = '';
@@ -417,15 +411,15 @@
     };
     
     async function cargarMisApuestas() {
-        if (!usuarioActual) return;
-        const { data } = await supabase.from('apuestas').select('*').eq('usuario_id', usuarioActual.id).order('fecha_apuesta', { ascending: false });
-        const container = document.getElementById('misApuestas');
-        if (!data || data.length === 0) { container.innerHTML = '<p>Aún no has apostado</p>'; return; }
-        container.innerHTML = data.map(a => `<div class="apuesta-item"><div><strong>${a.partido}</strong><br>${a.marcador_local}-${a.marcador_visitante} | $${a.monto}</div><div>${a.estado === 'pendiente' ? '⏳' : a.estado === 'ganada' ? '✅' : '❌'}</div></div>`).join('');
+        if (!usuario) return;
+        const { data } = await db.from('apuestas').select('*').eq('usuario_id', usuario.id).order('fecha_apuesta', { ascending: false });
+        const contenedor = document.getElementById('misApuestas');
+        if (!data || data.length === 0) { contenedor.innerHTML = '<p>Aún no has apostado</p>'; return; }
+        contenedor.innerHTML = data.map(a => `<div class="apuesta-item"><div><strong>${a.partido}</strong><br>${a.marcador_local}-${a.marcador_visitante} | $${a.monto}</div><div>${a.estado === 'pendiente' ? '⏳' : a.estado === 'ganada' ? '✅' : '❌'}</div></div>`).join('');
     }
     
     window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
-        const { data: apuestasPartido } = await supabase.from('apuestas').select('*').eq('partido_id', partidoId).eq('estado', 'pendiente');
+        const { data: apuestasPartido } = await db.from('apuestas').select('*').eq('partido_id', partidoId).eq('estado', 'pendiente');
         if (!apuestasPartido || apuestasPartido.length === 0) { alert('No hay apuestas'); return; }
         
         const ganadores = apuestasPartido.filter(a => a.marcador_local === resultadoLocal && a.marcador_visitante === resultadoVisitante);
@@ -434,15 +428,15 @@
         const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoGanadores / ganadores.length) : 0;
         
         for (const ganador of ganadores) {
-            const { data: usuario } = await supabase.from('usuarios').select('saldo').eq('id', ganador.usuario_id).single();
-            await supabase.from('usuarios').update({ saldo: (usuario?.saldo || 0) + premioPorGanador }).eq('id', ganador.usuario_id);
-            await supabase.from('apuestas').update({ estado: 'ganada', ganancia: premioPorGanador }).eq('id', ganador.id);
+            const { data: usuarioData } = await db.from('usuarios').select('saldo').eq('id', ganador.usuario_id).single();
+            await db.from('usuarios').update({ saldo: (usuarioData?.saldo || 0) + premioPorGanador }).eq('id', ganador.usuario_id);
+            await db.from('apuestas').update({ estado: 'ganada', ganancia: premioPorGanador }).eq('id', ganador.id);
         }
-        await supabase.from('apuestas').update({ estado: 'perdida' }).eq('partido_id', partidoId).neq('estado', 'ganada');
+        await db.from('apuestas').update({ estado: 'perdida' }).eq('partido_id', partidoId).neq('estado', 'ganada');
         
         alert(`✅ Partido ${resultadoLocal}-${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio: $${premioPorGanador.toLocaleString()}`);
-        if (usuarioActual) await cargarMisApuestas();
-        await cargarDatos();
+        if (usuario) await cargarMisApuestas();
+        await cargarEstadisticas();
     };
     
     function mostrarModalPago() {
@@ -454,24 +448,30 @@
     async function solicitarRecarga() {
         const monto = parseInt(document.getElementById('montoRecarga').value);
         if (!monto || monto < 5000) { alert('Mínimo $5,000'); return; }
-        await supabase.from('recargas').insert({ id: Date.now().toString(), usuario_id: usuarioActual.id, monto: monto, medio_pago: document.getElementById('medioPago').value, estado: 'verificando' });
+        await db.from('recargas').insert({ id: Date.now().toString(), usuario_id: usuario.id, monto: monto, medio_pago: document.getElementById('medioPago').value, estado: 'verificando' });
         alert('✅ Solicitud enviada');
         cerrarModal();
     }
     
     function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
-    function actualizarSaldo() { document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo.toLocaleString()}`; }
+    function mostrarSaldo() { document.getElementById('saldo').innerHTML = `$${usuario.saldo.toLocaleString()}`; }
     
-    function abrirAdmin() {
+    function abrirPanelAdmin() {
         const pass = prompt('Contraseña:');
-        if (pass === ADMIN_PASSWORD) {
+        if (pass === CLAVE_ADMIN) {
             document.getElementById('adminPanel').style.display = 'block';
             document.getElementById('adminBtn').style.display = 'none';
+        } else {
+            alert('Contraseña incorrecta');
         }
     }
     
-    // Eventos
-    document.getElementById('adminBtn').onclick = abrirAdmin;
+    // ============ ASIGNAR EVENTOS ============
+    document.getElementById('btnRegistrar').onclick = registrarUsuario;
+    document.getElementById('btnRecargar').onclick = mostrarModalPago;
+    document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
+    document.getElementById('btnCerrarModal').onclick = cerrarModal;
+    document.getElementById('adminBtn').onclick = abrirPanelAdmin;
     document.getElementById('btnCerrarAdmin').onclick = () => {
         document.getElementById('adminPanel').style.display = 'none';
         document.getElementById('adminBtn').style.display = 'flex';
@@ -483,19 +483,17 @@
         if (isNaN(gL) || isNaN(gV)) alert('Ingresa el resultado');
         else window.cerrarPartido(id, gL, gV);
     };
-    document.getElementById('btnRegistrar').onclick = registrar;
-    document.getElementById('btnRecargar').onclick = mostrarModalPago;
-    document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
-    document.getElementById('btnCerrarModal').onclick = cerrarModal;
     
+    // ============ INICIAR ============
     window.onload = function() {
-        const guardado = localStorage.getItem('usuario');
-        if (guardado) {
-            usuarioActual = JSON.parse(guardado);
+        console.log("🚀 Mundial 2026 - Listo!");
+        const datosGuardados = localStorage.getItem('usuario');
+        if (datosGuardados) {
+            usuario = JSON.parse(datosGuardados);
             document.getElementById('panelRegistro').style.display = 'none';
             document.getElementById('panelPrincipal').style.display = 'block';
-            actualizarSaldo();
-            cargarDatos();
+            mostrarSaldo();
+            cargarEstadisticas();
             cargarPartidos();
             cargarMisApuestas();
         }
