@@ -3,93 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba - Mundial 2026</title>
+    <title>🏆 Mundial 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial; padding: 20px; background: #1a472a; }
         .card { background: white; border-radius: 15px; padding: 20px; max-width: 500px; margin: 0 auto; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; font-size: 16px; }
         button { background: #ffd700; font-weight: bold; cursor: pointer; }
-        .resultado { background: #e8f5e9; padding: 10px; margin-top: 10px; border-radius: 8px; display: none; }
-        .error { background: #ffebee; color: red; }
+        .resultado { background: #e8f5e9; padding: 10px; margin-top: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
 <div class="card">
     <h1>🏆 MUNDIAL 2026</h1>
-    
     <h2>📝 Registro</h2>
-    <input type="text" id="nombre" placeholder="Nombre" value="prueba">
-    <input type="text" id="celular" placeholder="Celular" value="123456">
+    <input type="text" id="nombre" placeholder="Nombre">
+    <input type="text" id="celular" placeholder="Celular">
     <button id="btnRegistrar">🎯 Registrarse</button>
-    
     <div id="resultado" class="resultado"></div>
 </div>
 
 <script>
-    // ============ URL CORRECTA ============
+    // ============ CONFIGURACIÓN ============
     const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_0Bxd_EI0C1EeVdFjdhg3gA_yfbxeWLJ';
+    // ⚠️ PON AQUÍ TU CLAVE ANÓNIMA (empieza con eyJ) - NO la secreta!
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXVwd2Z5cW5qZWJua3hza2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNzM5OTYsImV4cCI6MjA5Njg0OTk5Nn0.TXyMksAdY1XxnbRR5Thx8yLsBcZg7bpahHC9om3VFF4';
     
-    console.log("URL:", SUPABASE_URL);
-    console.log("KEY:", SUPABASE_KEY.substring(0, 20) + "...");
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // Crear cliente
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("✅ Cliente creado");
-    
-    // Función de registro
-    async function registrarUsuario() {
-        const resultadoDiv = document.getElementById('resultado');
-        resultadoDiv.style.display = 'block';
-        resultadoDiv.innerHTML = '🔄 Registrando...';
-        resultadoDiv.className = 'resultado';
-        
+    // Registro
+    async function registrar() {
         const nombre = document.getElementById('nombre').value;
         const celular = document.getElementById('celular').value;
+        const resultado = document.getElementById('resultado');
         
         if (!nombre || !celular) {
-            resultadoDiv.innerHTML = '❌ Completa nombre y celular';
+            resultado.innerHTML = '❌ Completa nombre y celular';
             return;
         }
         
-        const usuarioId = Date.now().toString();
+        resultado.innerHTML = '🔄 Registrando...';
         
-        try {
-            const { data, error } = await supabase
-                .from('usuarios')
-                .insert({
-                    id: usuarioId,
-                    nombre: nombre,
-                    celular: celular,
-                    saldo: 0,
-                    fecha_registro: new Date()
-                });
-            
-            if (error) {
-                resultadoDiv.innerHTML = '❌ Error: ' + error.message;
-                resultadoDiv.className = 'resultado error';
-                return;
-            }
-            
-            resultadoDiv.innerHTML = '✅ ¡Registro exitoso! Bienvenido ' + nombre;
-            resultadoDiv.className = 'resultado';
-            
-            localStorage.setItem('usuario', JSON.stringify({ id: usuarioId, nombre: nombre, saldo: 0 }));
-            
-            setTimeout(() => {
-                alert('✅ Registro exitoso!');
-            }, 500);
-            
-        } catch (err) {
-            resultadoDiv.innerHTML = '❌ Error: ' + err.message;
-            resultadoDiv.className = 'resultado error';
+        const { error } = await db.from('usuarios').insert({
+            id: Date.now().toString(),
+            nombre: nombre,
+            celular: celular,
+            saldo: 0,
+            fecha_registro: new Date()
+        });
+        
+        if (error) {
+            resultado.innerHTML = '❌ Error: ' + error.message;
+        } else {
+            resultado.innerHTML = '✅ ¡Registro exitoso! Bienvenido ' + nombre;
+            localStorage.setItem('usuario', JSON.stringify({ nombre: nombre }));
         }
     }
     
-    // Asignar evento
-    document.getElementById('btnRegistrar').onclick = registrarUsuario;
-    console.log("✅ Evento asignado");
+    document.getElementById('btnRegistrar').onclick = registrar;
 </script>
 </body>
 </html>
