@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 Mundial 2026</title>
+    <title>🏆 Mundial 2026 - Pozo Acumulativo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0a2a1a, #1a472a);
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a2a1a 0%, #1a472a 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        .container { max-width: 600px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #ffd700, #ffed4a);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 { color: #1a472a; font-size: 2em; }
         .card {
             background: white;
             border-radius: 15px;
@@ -21,7 +29,12 @@
             margin-bottom: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        h1, h2 { color: #1a472a; text-align: center; margin-bottom: 15px; }
+        .card h2 {
+            color: #1a472a;
+            border-bottom: 3px solid #ffd700;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
         input, select, button {
             width: 100%;
             padding: 12px;
@@ -32,95 +45,209 @@
         }
         button {
             background: #ffd700;
+            color: #1a472a;
             font-weight: bold;
             cursor: pointer;
             border: none;
         }
         button:hover { background: #ffed4a; }
-        .saldo { font-size: 32px; font-weight: bold; color: #ffd700; text-align: center; }
-        .partido {
-            border-bottom: 1px solid #ddd;
-            padding: 15px 0;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
-        .partido:last-child { border-bottom: none; }
-        .marcador-inputs { display: flex; gap: 10px; margin: 10px 0; }
-        .marcador-inputs input { text-align: center; font-size: 18px; }
-        .apuesta {
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stat-number { font-size: 2em; font-weight: bold; color: #1a472a; }
+        .pozo-box {
+            background: linear-gradient(135deg, #ffd700, #ffed4a);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .saldo-box {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+        .partidos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .partido-card {
             background: #f9f9f9;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 5px solid #ffd700;
+            margin-bottom: 15px;
+        }
+        .fecha-hora {
+            background: #1a472a;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+        .marcador-inputs {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .marcador-inputs input {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .apuesta-item {
+            background: #f9f9f9;
+            padding: 12px;
             margin: 8px 0;
             border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
         }
         .admin-btn {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: #1a472a;
             color: #ffd700;
             border: 2px solid #ffd700;
-            font-size: 24px;
+            font-size: 30px;
             cursor: pointer;
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         .admin-panel {
             position: fixed;
-            bottom: 80px;
+            bottom: 100px;
             right: 20px;
-            width: 300px;
+            width: 350px;
             background: #1a472a;
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 15px;
+            padding: 20px;
             color: white;
+            z-index: 1001;
             display: none;
-            border: 1px solid #ffd700;
-            z-index: 1000;
+            border: 2px solid #ffd700;
         }
-        .admin-panel input, .admin-panel select { margin: 5px 0; }
+        .admin-panel h3 { color: #ffd700; margin-bottom: 15px; }
+        .admin-panel button { margin-top: 10px; }
+        .close-btn { background: #ff4444 !important; color: white !important; }
         .oculto { display: none; }
-        .visible { display: block; }
-        .btn-salir {
-            background: #ff4444;
-            color: white;
-            margin-top: 10px;
+        @media (max-width: 768px) {
+            .partidos-grid { grid-template-columns: 1fr; }
+            .admin-panel { width: 90%; right: 5%; }
         }
-        .texto-pequeno { font-size: 12px; color: #666; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="card">
+    <div class="header">
         <h1>🏆 MUNDIAL 2026 🏆</h1>
-        <p style="text-align:center">Cada apuesta: $5,000 | Pozo acumulativo 90%</p>
+        <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Pozo Acumulativo</p>
+        <small>⚠️ Solo mayores de 18 años | Cada apuesta: $5,000 | Casa: 10% | Ganadores: 90%</small>
     </div>
 
-    <!-- Panel Registro -->
+    <!-- Panel de Registro -->
     <div id="panelRegistro" class="card">
-        <h2>📝 Registro</h2>
-        <input type="text" id="nombre" placeholder="Nombre completo">
-        <input type="text" id="celular" placeholder="Celular">
+        <h2>📝 Registro de Jugador</h2>
+        <input type="text" id="nombre" placeholder="Nombre completo" required>
+        <input type="text" id="celular" placeholder="Celular" required>
         <button id="btnRegistrar">🎯 Registrarse (Saldo $0)</button>
-        <div class="texto-pequeno">⚠️ Solo mayores de 18 años | Juego social entre amigos</div>
+        <p style="margin-top: 10px; font-size: 12px; color: #666;">Al registrarte aceptas participar en un juego social entre amigos.</p>
     </div>
 
     <!-- Panel Principal -->
     <div id="panelPrincipal" class="oculto">
-        <div class="card">
-            <h2>💰 MI SALDO</h2>
-            <div class="saldo" id="saldo">$0</div>
-            <button id="btnRecargar">➕ Recargar (mín $5,000)</button>
-            <button id="btnCambiarUsuario" style="background:#ccc; margin-top:5px;">🔄 Cambiar de usuario</button>
+        <!-- ESTADÍSTICAS GLOBALES -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>💰 POZO TOTAL</div>
+                <div class="stat-number" id="pozoTotal">$0</div>
+                <small>90% para ganadores</small>
+            </div>
+            <div class="stat-card">
+                <div>🏠 COMISIÓN (10%)</div>
+                <div class="stat-number" id="comisionTotal">$0</div>
+                <small>Administración</small>
+            </div>
+            <div class="stat-card">
+                <div>👥 JUGADORES</div>
+                <div class="stat-number" id="totalJugadores">0</div>
+            </div>
+            <div class="stat-card">
+                <div>🎯 APUESTAS</div>
+                <div class="stat-number" id="totalApuestas">0</div>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>⚽ PARTIDOS</h2>
-            <div id="listaPartidos"></div>
+        <!-- SALDO PERSONAL -->
+        <div class="saldo-box">
+            <div>💰 MI SALDO</div>
+            <div class="stat-number" id="saldo">$0</div>
+            <button id="btnRecargar" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #ffd700; color: #1a472a;">➕ Recargar (mín $5,000)</button>
+            <button id="btnCambiarUsuario" style="width: auto; padding: 10px 30px; margin-top: 10px; background: #666; color: white;">🔄 Cambiar Usuario</button>
         </div>
 
+        <!-- RANKING -->
+        <div class="card">
+            <h2>🏆 RANKING DE GANADORES</h2>
+            <div id="ranking">Cargando...</div>
+        </div>
+
+        <!-- PARTIDOS -->
+        <div class="card">
+            <h2>⚽ CALENDARIO OFICIAL FIFA 2026</h2>
+            <div class="partidos-grid" id="partidosGrid"></div>
+        </div>
+
+        <!-- MIS APUESTAS -->
         <div class="card">
             <h2>📋 MIS APUESTAS</h2>
             <div id="misApuestas"></div>
@@ -130,18 +257,46 @@
 
 <!-- Botón Admin -->
 <div id="adminBtn" class="admin-btn">🔑</div>
+
+<!-- Panel Admin -->
 <div id="adminPanel" class="admin-panel">
-    <h3 style="color:#ffd700">👑 ADMIN</h3>
+    <h3>👑 ADMIN</h3>
     <select id="adminPartido">
         <option value="1">Colombia vs Argentina</option>
         <option value="2">Brasil vs Uruguay</option>
         <option value="3">Francia vs España</option>
         <option value="4">Alemania vs Inglaterra</option>
+        <option value="5">Portugal vs Holanda</option>
+        <option value="6">Italia vs Bélgica</option>
+        <option value="7">México vs Estados Unidos</option>
+        <option value="8">Japón vs Corea del Sur</option>
     </select>
-    <input type="number" id="adminGolL" placeholder="Goles Local">
-    <input type="number" id="adminGolV" placeholder="Goles Visitante">
-    <button id="btnCerrarPartido">✅ Cerrar Partido</button>
-    <button id="btnCerrarAdmin" class="btn-salir">❌ Cerrar</button>
+    <div style="display: flex; gap: 10px;">
+        <input type="number" id="adminGolL" placeholder="Goles Local" min="0">
+        <input type="number" id="adminGolV" placeholder="Goles Visitante" min="0">
+    </div>
+    <button id="btnCerrarPartido">✅ CERRAR PARTIDO</button>
+    <button id="btnVerPozo">💰 VER POZO ACTUAL</button>
+    <button id="btnCerrarAdmin" class="close-btn">❌ CERRAR</button>
+</div>
+
+<!-- Modal Recarga -->
+<div id="modalPago" class="modal">
+    <div class="modal-content">
+        <h3>💰 Recargar saldo</h3>
+        <select id="medioPago">
+            <option value="nequi">Nequi</option>
+            <option value="cuenta">Bancolombia</option>
+        </select>
+        <input type="number" id="montoRecarga" placeholder="Monto mínimo $5,000" min="5000">
+        <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0;">
+            <p><strong>📱 Datos para consignar:</strong></p>
+            <p id="datosPago"></p>
+            <p style="font-size: 11px;">* Después de consignar, el admin acreditará tu saldo</p>
+        </div>
+        <button id="btnSolicitarRecarga">✅ Solicitar recarga</button>
+        <button id="btnCerrarModal" class="close-btn">❌ Cancelar</button>
+    </div>
 </div>
 
 <script>
@@ -149,18 +304,26 @@
     const SUPABASE_URL = 'https://nymupwfyqnjebnkxskik.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXVwd2Z5cW5qZWJua3hza2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNzM5OTYsImV4cCI6MjA5Njg0OTk5Nn0.TXyMksAdY1XxnbRR5Thx8yLsBcZg7bpahHC9om3VFF4';
     
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let usuario = null;
+    const COSTO_APUESTA = 5000;
+    const ADMIN_PASSWORD = 'admin2026';
     
-    const partidos = [
-        { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: 'Jun 14 15:00' },
-        { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: 'Jun 14 18:00' },
-        { id: 3, local: 'Francia', visitante: 'España', fecha: 'Jun 15 12:00' },
-        { id: 4, local: 'Alemania', visitante: 'Inglaterra', fecha: 'Jun 15 16:00' }
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let usuarioActual = null;
+    
+    // Partidos del mundial
+    const partidosLista = [
+        { id: 1, local: 'Colombia', visitante: 'Argentina', fecha: '2026-06-14', hora: '15:00', grupo: 'Grupo A' },
+        { id: 2, local: 'Brasil', visitante: 'Uruguay', fecha: '2026-06-14', hora: '18:00', grupo: 'Grupo A' },
+        { id: 3, local: 'Francia', visitante: 'España', fecha: '2026-06-15', hora: '12:00', grupo: 'Grupo B' },
+        { id: 4, local: 'Alemania', visitante: 'Inglaterra', fecha: '2026-06-15', hora: '16:00', grupo: 'Grupo B' },
+        { id: 5, local: 'Portugal', visitante: 'Holanda', fecha: '2026-06-16', hora: '12:00', grupo: 'Grupo C' },
+        { id: 6, local: 'Italia', visitante: 'Bélgica', fecha: '2026-06-16', hora: '18:00', grupo: 'Grupo C' },
+        { id: 7, local: 'México', visitante: 'Estados Unidos', fecha: '2026-06-17', hora: '15:00', grupo: 'Grupo D' },
+        { id: 8, local: 'Japón', visitante: 'Corea del Sur', fecha: '2026-06-17', hora: '18:00', grupo: 'Grupo D' }
     ];
     
     // ============ REGISTRO ============
-    async function registrarUsuario() {
+    async function registrar() {
         const nombre = document.getElementById('nombre').value;
         const celular = document.getElementById('celular').value;
         
@@ -169,10 +332,10 @@
             return;
         }
         
-        const id = Date.now().toString();
+        const usuarioId = Date.now().toString();
         
         const { error } = await db.from('usuarios').insert({
-            id: id,
+            id: usuarioId,
             nombre: nombre,
             celular: celular,
             saldo: 0,
@@ -184,85 +347,119 @@
             return;
         }
         
-        usuario = { id: id, nombre: nombre, saldo: 0 };
-        localStorage.setItem('usuario', JSON.stringify(usuario));
+        usuarioActual = { id: usuarioId, nombre: nombre, saldo: 0 };
+        localStorage.setItem('usuario', JSON.stringify(usuarioActual));
         
         document.getElementById('panelRegistro').classList.add('oculto');
         document.getElementById('panelPrincipal').classList.remove('oculto');
         
-        document.getElementById('saldo').innerHTML = `$${usuario.saldo}`;
+        actualizarSaldo();
+        cargarDatosGlobales();
         cargarPartidos();
         cargarMisApuestas();
         
         alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
     }
     
-    // ============ CAMBIAR DE USUARIO ============
-    function cambiarUsuario() {
-        localStorage.removeItem('usuario');
-        usuario = null;
-        document.getElementById('panelPrincipal').classList.add('oculto');
-        document.getElementById('panelRegistro').classList.remove('oculto');
-        document.getElementById('nombre').value = '';
-        document.getElementById('celular').value = '';
+    // ============ DATOS GLOBALES ============
+    async function cargarDatosGlobales() {
+        try {
+            const { data: apuestas } = await db.from('apuestas').select('monto');
+            const pozoBruto = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
+            const comision = pozoBruto * 0.1;
+            const pozoNeto = pozoBruto * 0.9;
+            
+            document.getElementById('pozoTotal').innerHTML = `$${pozoNeto.toLocaleString()}`;
+            document.getElementById('comisionTotal').innerHTML = `$${comision.toLocaleString()}`;
+            
+            const { count: jugadores } = await db.from('usuarios').select('*', { count: 'exact', head: true });
+            document.getElementById('totalJugadores').innerText = jugadores || 0;
+            document.getElementById('totalApuestas').innerText = apuestas?.length || 0;
+            
+            // Ranking
+            const { data: ganadores } = await db.from('apuestas').select('nombre_usuario, ganancia_recibida').eq('estado', 'ganada');
+            const rankingMap = new Map();
+            ganadores?.forEach(g => {
+                rankingMap.set(g.nombre_usuario, (rankingMap.get(g.nombre_usuario) || 0) + (g.ganancia_recibida || 0));
+            });
+            const ranking = Array.from(rankingMap.entries()).sort((a,b) => b[1] - a[1]).slice(0,10);
+            
+            const rankingDiv = document.getElementById('ranking');
+            if (ranking.length === 0) {
+                rankingDiv.innerHTML = '<p>Aún no hay ganadores</p>';
+            } else {
+                rankingDiv.innerHTML = ranking.map((r,i) => `
+                    <div class="ranking-item">
+                        <span>${i+1}. ${r[0]}</span>
+                        <span>💰 $${r[1].toLocaleString()}</span>
+                    </div>
+                `).join('');
+            }
+        } catch (e) { console.error(e); }
     }
     
     // ============ PARTIDOS ============
-    function cargarPartidos() {
-        const html = partidos.map(p => `
-            <div class="partido">
-                <strong>🏆 ${p.local} vs ${p.visitante}</strong><br>
-                <small>📅 ${p.fecha}</small>
+    async function cargarPartidos() {
+        let partidos = partidosLista;
+        
+        try {
+            const { data } = await db.from('partidos').select('*');
+            if (data && data.length > 0) partidos = data;
+        } catch (e) {}
+        
+        const grid = document.getElementById('partidosGrid');
+        grid.innerHTML = partidos.map(p => `
+            <div class="partido-card">
+                <div><strong>🏆 ${p.local} vs ${p.visitante}</strong></div>
+                <div class="fecha-hora">📅 ${p.fecha} | 🕐 ${p.hora} (Hora Colombia) | ${p.grupo}</div>
                 <div class="marcador-inputs">
-                    <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" value="">
-                    <span>-</span>
-                    <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" value="">
+                    <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;">
+                    <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center; font-size:20px;">
                 </div>
-                <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $5,000</button>
+                <button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>
             </div>
         `).join('');
-        document.getElementById('listaPartidos').innerHTML = html;
     }
     
     // ============ APOSTAR ============
-    window.apostar = async (id, local, visitante) => {
-        if (!usuario) { alert('Regístrate primero'); return; }
+    window.apostar = async function(id, local, visitante) {
+        if (!usuarioActual) { alert('Regístrate primero'); return; }
         
         const golesL = parseInt(document.getElementById(`golL_${id}`).value);
         const golesV = parseInt(document.getElementById(`golV_${id}`).value);
         
         if (isNaN(golesL) || isNaN(golesV)) {
-            alert('Ingresa el marcador');
+            alert('Ingresa el marcador que pronosticas');
             return;
         }
         
-        if (usuario.saldo < 5000) {
-            alert('Saldo insuficiente. Recarga $5,000');
+        if (usuarioActual.saldo < COSTO_APUESTA) {
+            alert(`❌ Saldo insuficiente. Necesitas $${COSTO_APUESTA.toLocaleString()}`);
             return;
         }
         
-        // Restar saldo
-        const nuevoSaldo = usuario.saldo - 5000;
-        await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuario.id);
-        usuario.saldo = nuevoSaldo;
-        document.getElementById('saldo').innerHTML = `$${usuario.saldo}`;
+        const nuevoSaldo = usuarioActual.saldo - COSTO_APUESTA;
+        await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', usuarioActual.id);
+        usuarioActual.saldo = nuevoSaldo;
         
-        // Guardar apuesta
         await db.from('apuestas').insert({
             id: Date.now().toString(),
-            usuario_id: usuario.id,
-            nombre_usuario: usuario.nombre,
+            usuario_id: usuarioActual.id,
+            nombre_usuario: usuarioActual.nombre,
             partido: `${local} vs ${visitante}`,
             partido_id: id,
             marcador_local: golesL,
             marcador_visitante: golesV,
-            monto: 5000,
+            monto: COSTO_APUESTA,
             estado: 'pendiente',
             fecha_apuesta: new Date()
         });
         
-        alert('✅ Apuesta registrada!');
-        cargarMisApuestas();
+        actualizarSaldo();
+        await cargarMisApuestas();
+        await cargarDatosGlobales();
+        
+        alert(`✅ Apuesta registrada!\n🎯 Pronóstico: ${golesL} - ${golesV}`);
         
         document.getElementById(`golL_${id}`).value = '';
         document.getElementById(`golV_${id}`).value = '';
@@ -270,131 +467,175 @@
     
     // ============ MIS APUESTAS ============
     async function cargarMisApuestas() {
-        if (!usuario) return;
+        if (!usuarioActual) return;
         
         const { data } = await db.from('apuestas')
             .select('*')
-            .eq('usuario_id', usuario.id)
+            .eq('usuario_id', usuarioActual.id)
             .order('fecha_apuesta', { ascending: false });
         
         const container = document.getElementById('misApuestas');
-        
         if (!data || data.length === 0) {
-            container.innerHTML = '<p>Aún no has apostado</p>';
+            container.innerHTML = '<p>Aún no has realizado apuestas</p>';
             return;
         }
         
         container.innerHTML = data.map(a => `
-            <div class="apuesta">
-                <strong>${a.partido}</strong><br>
-                Pronóstico: ${a.marcador_local} - ${a.marcador_visitante} | $${a.monto}
-                <span style="float:right">${a.estado === 'pendiente' ? '⏳' : a.estado === 'ganada' ? '✅ Ganó' : '❌ Perdió'}</span>
+            <div class="apuesta-item">
+                <div>
+                    <strong>${a.partido}</strong><br>
+                    Tu pronóstico: ${a.marcador_local} - ${a.marcador_visitante}<br>
+                    Apostaste: $${a.monto.toLocaleString()}
+                    ${a.estado === 'ganada' ? `<br>🎉 GANASTE: $${(a.ganancia_recibida || 0).toLocaleString()}` : ''}
+                </div>
+                <div>${a.estado === 'pendiente' ? '⏳ Pendiente' : a.estado === 'ganada' ? '✅ Ganada' : '❌ Perdida'}</div>
             </div>
         `).join('');
     }
     
-    // ============ RECARGAS ============
-    document.getElementById('btnRecargar').onclick = () => {
-        alert('🔑 Nequi: 0091030441\n🏦 Bancolombia: 26269998309\n\nDespués de consignar, el admin acreditará tu saldo.');
-    };
-    
-    document.getElementById('btnCambiarUsuario').onclick = cambiarUsuario;
-    
-    // ============ ADMIN ============
-    document.getElementById('adminBtn').onclick = () => {
-        const pass = prompt('Contraseña:');
-        if (pass === 'admin2026') {
-            document.getElementById('adminPanel').style.display = 'block';
-            document.getElementById('adminBtn').style.display = 'none';
-        } else {
-            alert('Contraseña incorrecta');
-        }
-    };
-    
-    document.getElementById('btnCerrarAdmin').onclick = () => {
-        document.getElementById('adminPanel').style.display = 'none';
-        document.getElementById('adminBtn').style.display = 'flex';
-    };
-    
-    document.getElementById('btnCerrarPartido').onclick = async () => {
-        const id = parseInt(document.getElementById('adminPartido').value);
-        const gL = parseInt(document.getElementById('adminGolL').value);
-        const gV = parseInt(document.getElementById('adminGolV').value);
-        
-        if (isNaN(gL) || isNaN(gV)) {
-            alert('Ingresa el resultado');
-            return;
-        }
-        
-        await window.cerrarPartido(id, gL, gV);
-        
-        document.getElementById('adminGolL').value = '';
-        document.getElementById('adminGolV').value = '';
-    };
-    
-    // ============ CERRAR PARTIDO ============
-    window.cerrarPartido = async (partidoId, golesL, golesV) => {
+    // ============ ADMIN: CERRAR PARTIDO ============
+    window.cerrarPartido = async function(partidoId, resultadoLocal, resultadoVisitante) {
         const { data: apuestasPartido } = await db.from('apuestas')
             .select('*')
             .eq('partido_id', partidoId)
             .eq('estado', 'pendiente');
         
         if (!apuestasPartido || apuestasPartido.length === 0) {
-            alert('No hay apuestas en este partido');
+            alert('No hay apuestas pendientes para este partido');
             return;
         }
         
         const ganadores = apuestasPartido.filter(a => 
-            a.marcador_local === golesL && a.marcador_visitante === golesV
+            a.marcador_local === resultadoLocal && a.marcador_visitante === resultadoVisitante
         );
         
-        const pozoTotal = apuestasPartido.reduce((s, a) => s + a.monto, 0);
-        const pozoGanadores = Math.floor(pozoTotal * 0.9);
+        const pozoPartido = apuestasPartido.reduce((sum, a) => sum + a.monto, 0);
+        const pozoGanadores = Math.floor(pozoPartido * 0.9);
         const premioPorGanador = ganadores.length > 0 ? Math.floor(pozoGanadores / ganadores.length) : 0;
         
         // Pagar a ganadores
-        for (const g of ganadores) {
-            const { data: user } = await db.from('usuarios').select('saldo').eq('id', g.usuario_id).single();
-            const nuevoSaldo = (user?.saldo || 0) + premioPorGanador;
-            await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', g.usuario_id);
-            await db.from('apuestas').update({ estado: 'ganada', ganancia: premioPorGanador }).eq('id', g.id);
+        for (const ganador of ganadores) {
+            const { data: user } = await db.from('usuarios').select('saldo').eq('id', ganador.usuario_id).single();
+            await db.from('usuarios').update({ saldo: (user?.saldo || 0) + premioPorGanador }).eq('id', ganador.usuario_id);
+            await db.from('apuestas').update({ 
+                estado: 'ganada', 
+                ganancia_recibida: premioPorGanador,
+                resultado_real_local: resultadoLocal,
+                resultado_real_visitante: resultadoVisitante
+            }).eq('id', ganador.id);
         }
         
         // Marcar perdedores
-        await db.from('apuestas').update({ estado: 'perdida' }).eq('partido_id', partidoId).neq('estado', 'ganada');
+        await db.from('apuestas').update({ 
+            estado: 'perdida',
+            resultado_real_local: resultadoLocal,
+            resultado_real_visitante: resultadoVisitante
+        }).eq('partido_id', partidoId).neq('estado', 'ganada');
         
-        alert(`✅ Resultado: ${golesL} - ${golesV}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio por ganador: $${premioPorGanador.toLocaleString()}`);
+        alert(`✅ Partido finalizado!\n🎯 Resultado: ${resultadoLocal} - ${resultadoVisitante}\n🏆 Ganadores: ${ganadores.length}\n💰 Premio por ganador: $${premioPorGanador.toLocaleString()}\n🏠 Comisión (10%): $${(pozoPartido * 0.1).toLocaleString()}`);
         
-        // Actualizar saldo del usuario actual si es ganador
-        if (usuario) {
-            const { data: updated } = await db.from('usuarios').select('saldo').eq('id', usuario.id).single();
+        if (usuarioActual) {
+            const { data: updated } = await db.from('usuarios').select('saldo').eq('id', usuarioActual.id).single();
             if (updated) {
-                usuario.saldo = updated.saldo;
-                document.getElementById('saldo').innerHTML = `$${usuario.saldo}`;
+                usuarioActual.saldo = updated.saldo;
+                actualizarSaldo();
             }
             await cargarMisApuestas();
         }
+        await cargarDatosGlobales();
     };
     
-    // ============ VERIFICAR SESIÓN ============
+    // ============ RECARGAS ============
+    function mostrarModalPago() {
+        const medio = document.getElementById('medioPago').value;
+        document.getElementById('datosPago').innerHTML = medio === 'nequi' ? '🔑 Nequi: 0091030441' : '🏦 Bancolombia: 26269998309';
+        document.getElementById('modalPago').style.display = 'flex';
+    }
+    
+    async function solicitarRecarga() {
+        const monto = parseInt(document.getElementById('montoRecarga').value);
+        if (!monto || monto < 5000) {
+            alert('El monto mínimo es $5,000');
+            return;
+        }
+        
+        await db.from('recargas').insert({
+            id: Date.now().toString(),
+            usuario_id: usuarioActual.id,
+            monto: monto,
+            medio_pago: document.getElementById('medioPago').value,
+            estado: 'verificando'
+        });
+        
+        alert('✅ Solicitud enviada. Un administrador verificará y acreditará tu saldo.');
+        cerrarModal();
+    }
+    
+    function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
+    function actualizarSaldo() { document.getElementById('saldo').innerHTML = `$${usuarioActual.saldo.toLocaleString()}`; }
+    
+    // ============ CAMBIAR USUARIO ============
+    function cambiarUsuario() {
+        localStorage.removeItem('usuario');
+        usuarioActual = null;
+        document.getElementById('panelPrincipal').classList.add('oculto');
+        document.getElementById('panelRegistro').classList.remove('oculto');
+        document.getElementById('nombre').value = '';
+        document.getElementById('celular').value = '';
+    }
+    
+    // ============ ADMIN PANEL ============
+    function abrirAdmin() {
+        const pass = prompt('Contraseña de administrador:');
+        if (pass === ADMIN_PASSWORD) {
+            document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('adminBtn').style.display = 'none';
+        } else {
+            alert('Contraseña incorrecta');
+        }
+    }
+    
+    async function verPozo() {
+        const { data: apuestas } = await db.from('apuestas').select('monto');
+        const total = apuestas?.reduce((s, a) => s + a.monto, 0) || 0;
+        alert(`💰 POZO BRUTO: $${total.toLocaleString()}\n🏠 COMISIÓN (10%): $${(total * 0.1).toLocaleString()}\n🎁 PARA GANADORES (90%): $${(total * 0.9).toLocaleString()}`);
+    }
+    
+    // ============ EVENTOS ============
+    document.getElementById('btnRegistrar').onclick = registrar;
+    document.getElementById('btnRecargar').onclick = mostrarModalPago;
+    document.getElementById('btnSolicitarRecarga').onclick = solicitarRecarga;
+    document.getElementById('btnCerrarModal').onclick = cerrarModal;
+    document.getElementById('btnCambiarUsuario').onclick = cambiarUsuario;
+    document.getElementById('adminBtn').onclick = abrirAdmin;
+    document.getElementById('btnCerrarAdmin').onclick = () => {
+        document.getElementById('adminPanel').style.display = 'none';
+        document.getElementById('adminBtn').style.display = 'flex';
+    };
+    document.getElementById('btnCerrarPartido').onclick = () => {
+        const id = parseInt(document.getElementById('adminPartido').value);
+        const gL = parseInt(document.getElementById('adminGolL').value);
+        const gV = parseInt(document.getElementById('adminGolV').value);
+        if (isNaN(gL) || isNaN(gV)) alert('Ingresa el resultado');
+        else window.cerrarPartido(id, gL, gV);
+        document.getElementById('adminGolL').value = '';
+        document.getElementById('adminGolV').value = '';
+    };
+    document.getElementById('btnVerPozo').onclick = verPozo;
+    
+    // ============ INICIAR ============
     window.onload = () => {
-        console.log("🚀 App iniciada");
         const guardado = localStorage.getItem('usuario');
         if (guardado) {
-            usuario = JSON.parse(guardado);
+            usuarioActual = JSON.parse(guardado);
             document.getElementById('panelRegistro').classList.add('oculto');
             document.getElementById('panelPrincipal').classList.remove('oculto');
-            document.getElementById('saldo').innerHTML = `$${usuario.saldo || 0}`;
+            actualizarSaldo();
+            cargarDatosGlobales();
             cargarPartidos();
             cargarMisApuestas();
-        } else {
-            document.getElementById('panelRegistro').classList.remove('oculto');
-            document.getElementById('panelPrincipal').classList.add('oculto');
         }
     };
-    
-    // Asignar evento de registro
-    document.getElementById('btnRegistrar').onclick = registrarUsuario;
 </script>
 </body>
 </html>
