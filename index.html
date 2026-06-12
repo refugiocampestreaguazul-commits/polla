@@ -176,7 +176,7 @@
             position: fixed;
             bottom: 100px;
             right: 20px;
-            width: 380px;
+            width: 400px;
             background: #1a472a;
             border-radius: 15px;
             padding: 20px;
@@ -187,8 +187,9 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        .admin-panel h3 { color: #ffd700; margin-bottom: 15px; }
-        .admin-panel button { margin-top: 10px; }
+        .admin-panel h3 { color: #ffd700; margin-bottom: 15px; text-align: center; }
+        .admin-panel h4 { color: #ffd700; margin: 10px 0; }
+        .admin-panel button { margin-top: 5px; }
         .close-btn { background: #ff4444 !important; color: white !important; }
         .oculto { display: none; }
         .btn-recargar {
@@ -202,17 +203,25 @@
             letter-spacing: 3px;
             font-size: 18px;
         }
+        .seccion-admin {
+            background: #0a2a1a;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
         .solicitud-item {
             background: #2a5a3a;
-            padding: 12px;
+            padding: 10px;
             margin: 8px 0;
             border-radius: 8px;
             border-left: 3px solid #ffd700;
+            font-size: 13px;
         }
-        .solicitud-item small { color: #ccc; font-size: 11px; }
-        .btn-aprobar { background: #4caf50; color: white; margin: 5px 0; }
-        .btn-rechazar { background: #ff4444; color: white; margin: 5px 0; }
+        .solicitud-item small { color: #ccc; font-size: 10px; }
+        .btn-aprobar { background: #4caf50; color: white; margin: 3px 0; padding: 8px; font-size: 14px; }
+        .btn-rechazar { background: #ff4444; color: white; margin: 3px 0; padding: 8px; font-size: 14px; }
         hr { border-color: #ffd700; margin: 10px 0; }
+        .btn-actualizar { background: #2196F3; color: white; }
         @media (max-width: 768px) {
             .partidos-grid { grid-template-columns: 1fr; }
             .admin-panel { width: 95%; right: 2.5%; left: 2.5%; bottom: 10px; }
@@ -289,13 +298,13 @@
 <!-- Botón Admin -->
 <div id="adminBtn" class="admin-btn">🔑</div>
 
-<!-- Panel Admin -->
+<!-- Panel Admin COMPLETO -->
 <div id="adminPanel" class="admin-panel">
     <h3>👑 ADMINISTRADOR</h3>
     
     <!-- SECCIÓN 1: CERRAR PARTIDO -->
-    <div style="background: #0a2a1a; padding: 10px; border-radius: 10px; margin-bottom: 15px;">
-        <h4 style="color:#ffd700; margin-bottom:10px;">⚽ CERRAR PARTIDO</h4>
+    <div class="seccion-admin">
+        <h4>⚽ CERRAR PARTIDO</h4>
         <select id="adminPartido">
             <option value="1">Colombia vs Argentina</option>
             <option value="2">Brasil vs Uruguay</option>
@@ -314,17 +323,17 @@
     </div>
     
     <!-- SECCIÓN 2: APROBAR RECARGAS -->
-    <div style="background: #0a2a1a; padding: 10px; border-radius: 10px; margin-bottom: 15px;">
-        <h4 style="color:#ffd700; margin-bottom:10px;">💰 APROBAR RECARGAS</h4>
-        <div id="listaRecargas" style="max-height: 300px; overflow-y: auto;">
+    <div class="seccion-admin">
+        <h4>💰 APROBAR RECARGAS</h4>
+        <button id="btnActualizarRecargas" class="btn-actualizar" style="background:#2196F3;">🔄 ACTUALIZAR LISTA</button>
+        <div id="listaRecargas" style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
             <p style="text-align:center; color:#ccc;">Cargando solicitudes...</p>
         </div>
-        <button id="btnActualizarRecargas" style="background:#ffd700; color:#1a472a;">🔄 ACTUALIZAR</button>
     </div>
     
     <!-- SECCIÓN 3: ESTADÍSTICAS -->
-    <div style="background: #0a2a1a; padding: 10px; border-radius: 10px; margin-bottom: 15px;">
-        <h4 style="color:#ffd700; margin-bottom:10px;">📊 ESTADÍSTICAS</h4>
+    <div class="seccion-admin">
+        <h4>📊 ESTADÍSTICAS</h4>
         <button id="btnVerPozo">💰 VER POZO ACTUAL</button>
         <button id="btnVerUsuarios">👥 VER USUARIOS</button>
     </div>
@@ -616,101 +625,105 @@
     
     // ============ ADMIN: APROBAR RECARGAS ============
     async function cargarSolicitudesRecarga() {
-        const { data: solicitudes, error } = await db.from('recargas')
-            .select('*')
-            .eq('estado', 'verificando')
-            .order('fecha', { ascending: false });
-        
-        if (error) {
-            console.error(error);
-            document.getElementById('listaRecargas').innerHTML = '<p style="color:#ff4444;">Error al cargar</p>';
-            return;
-        }
+        console.log("Cargando solicitudes de recarga...");
         
         const container = document.getElementById('listaRecargas');
+        container.innerHTML = '<p style="text-align:center; color:#ccc;">🔄 Cargando...</p>';
         
-        if (!solicitudes || solicitudes.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#ccc;">✅ No hay solicitudes pendientes</p>';
-            return;
-        }
-        
-        // Obtener nombres de usuarios
-        const usuariosMap = new Map();
-        for (const sol of solicitudes) {
-            if (!usuariosMap.has(sol.usuario_id)) {
-                const { data: user } = await db.from('usuarios').select('nombre').eq('id', sol.usuario_id).single();
-                usuariosMap.set(sol.usuario_id, user?.nombre || 'Desconocido');
+        try {
+            const { data: solicitudes, error } = await db.from('recargas')
+                .select('*')
+                .eq('estado', 'verificando')
+                .order('fecha', { ascending: false });
+            
+            if (error) {
+                console.error("Error al cargar:", error);
+                container.innerHTML = '<p style="color:#ff4444;">❌ Error al cargar</p>';
+                return;
             }
+            
+            if (!solicitudes || solicitudes.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#ccc;">✅ No hay solicitudes pendientes</p>';
+                return;
+            }
+            
+            // Obtener nombres de usuarios
+            let html = '';
+            for (const sol of solicitudes) {
+                const { data: user } = await db.from('usuarios').select('nombre').eq('id', sol.usuario_id).single();
+                const nombreUsuario = user?.nombre || 'Desconocido';
+                
+                html += `
+                    <div class="solicitud-item" id="sol_${sol.id}">
+                        <div><strong>👤 ${nombreUsuario}</strong></div>
+                        <div>💰 Monto: $${sol.monto.toLocaleString()}</div>
+                        <div>📱 ${sol.medio_pago === 'nequi' ? 'Nequi' : 'Bancolombia'}</div>
+                        <div><small>📅 ${new Date(sol.fecha).toLocaleString()}</small></div>
+                        <button class="btn-aprobar" onclick="aprobarRecarga('${sol.id}', '${sol.usuario_id}', ${sol.monto})">✅ APROBAR</button>
+                        <button class="btn-rechazar" onclick="rechazarRecarga('${sol.id}')">❌ RECHAZAR</button>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+            
+        } catch (err) {
+            console.error("Error:", err);
+            container.innerHTML = '<p style="color:#ff4444;">❌ Error al cargar</p>';
         }
-        
-        container.innerHTML = solicitudes.map(sol => `
-            <div class="solicitud-item" id="sol_${sol.id}">
-                <div><strong>👤 ${usuariosMap.get(sol.usuario_id)}</strong></div>
-                <div>💰 Monto: $${sol.monto.toLocaleString()}</div>
-                <div>📱 ${sol.medio_pago === 'nequi' ? 'Nequi' : 'Bancolombia'}</div>
-                <div><small>📅 ${new Date(sol.fecha).toLocaleString()}</small></div>
-                <button class="btn-aprobar" onclick="aprobarRecarga('${sol.id}', '${sol.usuario_id}', ${sol.monto})">✅ APROBAR</button>
-                <button class="btn-rechazar" onclick="rechazarRecarga('${sol.id}')">❌ RECHAZAR</button>
-            </div>
-        `).join('');
     }
     
     window.aprobarRecarga = async function(idRecarga, idUsuario, monto) {
         const confirmar = confirm(`✅ ¿Confirmar recarga de $${monto.toLocaleString()}?`);
-        
         if (!confirmar) return;
         
-        // 1. Obtener saldo actual del usuario
-        const { data: user } = await db.from('usuarios').select('saldo').eq('id', idUsuario).single();
-        const nuevoSaldo = (user?.saldo || 0) + monto;
-        
-        // 2. Actualizar saldo del usuario
-        const { error: errorUpdate } = await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', idUsuario);
-        
-        if (errorUpdate) {
-            alert('❌ Error al actualizar saldo: ' + errorUpdate.message);
-            return;
+        try {
+            // 1. Obtener saldo actual del usuario
+            const { data: user } = await db.from('usuarios').select('saldo').eq('id', idUsuario).single();
+            const nuevoSaldo = (user?.saldo || 0) + monto;
+            
+            // 2. Actualizar saldo del usuario
+            const { error: errorUpdate } = await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', idUsuario);
+            if (errorUpdate) throw new Error(errorUpdate.message);
+            
+            // 3. Marcar recarga como confirmada
+            const { error: errorRecarga } = await db.from('recargas').update({ estado: 'confirmado' }).eq('id', idRecarga);
+            if (errorRecarga) throw new Error(errorRecarga.message);
+            
+            alert(`✅ Recarga aprobada!\n💰 Se añadieron $${monto.toLocaleString()} al usuario.`);
+            
+            // Actualizar la lista
+            document.getElementById(`sol_${idRecarga}`)?.remove();
+            cargarSolicitudesRecarga();
+            
+            // Si el usuario actual es el que recibió la recarga, actualizar su saldo visible
+            if (usuarioActual && usuarioActual.id === idUsuario) {
+                usuarioActual.saldo = nuevoSaldo;
+                actualizarUsuarioCard();
+                await cargarMisApuestas();
+            }
+            
+            await cargarDatosGlobales();
+            
+        } catch (err) {
+            alert('❌ Error: ' + err.message);
         }
-        
-        // 3. Marcar recarga como confirmada
-        const { error: errorRecarga } = await db.from('recargas').update({ estado: 'confirmado' }).eq('id', idRecarga);
-        
-        if (errorRecarga) {
-            alert('❌ Error al actualizar recarga: ' + errorRecarga.message);
-            return;
-        }
-        
-        alert(`✅ Recarga aprobada!\n💰 Se añadieron $${monto.toLocaleString()} al usuario.`);
-        
-        // Actualizar la lista
-        document.getElementById(`sol_${idRecarga}`)?.remove();
-        cargarSolicitudesRecarga();
-        
-        // Si el usuario actual es el que recibió la recarga, actualizar su saldo visible
-        if (usuarioActual && usuarioActual.id === idUsuario) {
-            usuarioActual.saldo = nuevoSaldo;
-            actualizarUsuarioCard();
-            await cargarMisApuestas();
-        }
-        
-        await cargarDatosGlobales();
     };
     
     window.rechazarRecarga = async function(idRecarga) {
         const confirmar = confirm('❌ ¿Rechazar esta solicitud de recarga?');
-        
         if (!confirmar) return;
         
-        const { error } = await db.from('recargas').update({ estado: 'rechazado' }).eq('id', idRecarga);
-        
-        if (error) {
-            alert('❌ Error: ' + error.message);
-            return;
+        try {
+            const { error } = await db.from('recargas').update({ estado: 'rechazado' }).eq('id', idRecarga);
+            if (error) throw new Error(error.message);
+            
+            alert('✅ Recarga rechazada');
+            document.getElementById(`sol_${idRecarga}`)?.remove();
+            cargarSolicitudesRecarga();
+            
+        } catch (err) {
+            alert('❌ Error: ' + err.message);
         }
-        
-        alert('✅ Recarga rechazada');
-        document.getElementById(`sol_${idRecarga}`)?.remove();
-        cargarSolicitudesRecarga();
     };
     
     // ============ RECARGAS PARA USUARIOS ============
@@ -754,7 +767,6 @@
         }
         
         const confirmar = confirm(`📋 Confirmar solicitud de recarga:\n\n💰 Monto: $${monto.toLocaleString()}\n📱 Medio: ${medioPago === 'nequi' ? 'Nequi' : 'Bancolombia'}\n\n¿Los datos son correctos?`);
-        
         if (!confirmar) return;
         
         try {
