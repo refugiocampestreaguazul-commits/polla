@@ -484,14 +484,18 @@
         
         // ============ RECARGAS ============
         function mostrarModalPago() {
-            const medio = document.getElementById('medioPago').value;
-            let datos = '';
-            if (medio === 'nequi') datos = '📱 Nequi: 300 123 4567 - Mundial BetPlay';
-            else if (medio === 'daviplata') datos = '💰 Daviplata: 310 987 6543 - Mundial BetPlay';
-            else datos = '🏦 Cuenta de ahorros: Bancolombia #123-456-789';
-            document.getElementById('datosPago').innerHTML = datos;
-            document.getElementById('modalPago').style.display = 'flex';
-        }
+    const medio = document.getElementById('medioPago').value;
+    let datos = '';
+    if (medio === 'nequi') {
+        datos = '🔑 Nequi llave: <strong>0091030441</strong><br><br>📤 Envía tu comprobante a:<br>📱 WhatsApp: <a href="https://wa.me/573103415830" target="_blank">310 123 4567</a>';
+    } else if (medio === 'daviplata') {
+        datos = '⚠️ Daviplata no disponible. Usa Nequi o Bancolombia.';
+    } else {
+        datos = '🏦 Bancolombia: <strong>26269998309</strong><br><br>📤 Envía tu comprobante a:<br>📱 WhatsApp: <a href="https://wa.me/573103415830" target="_blank">310 123 4567</a>';
+    }
+    document.getElementById('datosPago').innerHTML = datos;
+    document.getElementById('modalPago').style.display = 'flex';
+}
         
         async function solicitarRecarga() {
             const monto = parseInt(document.getElementById('montoRecarga').value);
