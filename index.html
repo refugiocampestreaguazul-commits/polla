@@ -263,8 +263,7 @@
     <div id="panelRegistro" class="card">
         <h2>📝 Registro de Jugador</h2>
         <input type="text" id="nombre" placeholder="Nombre completo" required>
-        <input type="email" id="email" placeholder="Correo electrónico">
-        <input type="tel" id="celular" placeholder="Celular" required>
+        <input type="tel" id="whatsapp" placeholder="WhatsApp" required>
         <select id="medioPagoRegistro">
             <option value="nequi">Nequi</option>
             <option value="daviplata">Daviplata</option>
@@ -408,14 +407,18 @@
     }
     
     function partidoCerrado(fecha, hora) {
+        // Obtener hora actual de Colombia (UTC-5)
         const ahora = new Date();
+        
+        // Convertir la fecha del partido (YYYY-MM-DD)
         const [year, month, day] = fecha.split('-');
         const [horas, minutos] = hora.split(':');
+        
+        // Crear fecha del partido en hora Colombia
         const fechaPartido = new Date(year, month-1, day, horas, minutos);
         
-        // Depuración: ver en consola
-        console.log(`📅 ${fecha} ${hora} | Ahora: ${ahora.toLocaleString()} | Partido: ${fechaPartido.toLocaleString()} | Cerrado: ${ahora >= fechaPartido}`);
-        
+        // El partido está cerrado si la fecha actual es MAYOR o IGUAL a la fecha del partido
+        // (es decir, si el partido ya empezó o ya terminó)
         return ahora >= fechaPartido;
     }
     
