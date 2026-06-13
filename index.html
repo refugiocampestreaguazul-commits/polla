@@ -314,16 +314,69 @@
         <div id="usuarioCard" class="usuario-card" style="display:none;"></div>
     </div>
 
-    <div id="panelRegistro" class="card">
-        <h2>📝 Registro de Jugador</h2>
+    <div id="panelRegistro" class="card" style="max-width: 500px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 48px;">🏆</div>
+            <h2>¡Bienvenido a Mundial 2026!</h2>
+            <p style="color: #666;">Completa tus datos para comenzar</p>
+        </div>
+        
+        <!-- Campo 1: Nombre completo -->
         <input type="text" id="nombre" placeholder="Nombre completo" required>
+        
+        <!-- Campo 2: Número de cédula -->
+        <input type="text" id="cedula" placeholder="Número de cédula" required>
+        <div id="cedulaError" style="color: #e74c3c; font-size: 12px; margin-top: -5px; margin-bottom: 10px; display: none;"></div>
+        
+        <!-- Campo 3: Correo electrónico -->
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <div id="emailError" style="color: #e74c3c; font-size: 12px; margin-top: -5px; margin-bottom: 10px; display: none;"></div>
+        
+        <!-- Campo 4: WhatsApp -->
         <input type="tel" id="whatsapp" placeholder="WhatsApp" required>
-        <select id="medioPagoRegistro">
-            <option value="worldsystems"> 🔑 WorldSystems</option>
-            <option value="cuenta"> # Cta Ahorros Bancolombia</option>
-        </select>
-        <button id="btnRegistrar">🎯 Registrarse (Saldo $0)</button>
-        <p style="margin-top: 10px; font-size: 12px; color: #666;">Al registrarte aceptas participar en un juego social entre amigos.</p>
+        <div id="whatsappError" style="color: #e74c3c; font-size: 12px; margin-top: -5px; margin-bottom: 10px; display: none;"></div>
+        
+        <!-- Términos y condiciones -->
+        <div style="display: flex; align-items: center; gap: 10px; margin: 15px 0;">
+            <input type="checkbox" id="terminos" style="width: 20px; height: 20px; margin: 0;">
+            <label for="terminos" style="font-size: 12px; color: #555;">
+                Acepto los <a href="#" id="openTerminos" style="color: #1a472a;">términos y condiciones</a>
+            </label>
+        </div>
+        
+        <!-- Botón de registro -->
+        <button id="btnRegistrar" style="background: linear-gradient(135deg, #1a472a, #0a2a1a); color: #ffd700; border-radius: 25px; padding: 14px; font-size: 16px;">
+            🎯 Registrarme
+        </button>
+        
+        <div id="registroLoading" style="display: none; text-align: center; margin-top: 15px;">
+            <span>🔄 Procesando registro...</span>
+        </div>
+        
+        <p style="margin-top: 20px; font-size: 11px; color: #999; text-align: center;">
+            Al registrarte confirmas que eres mayor de 18 años.<br>
+            📊 Administración 10% | Ganadores 90% | Juego social entre amigos
+        </p>
+    </div>
+    
+    <!-- Modal de Términos y Condiciones -->
+    <div id="modalTerminos" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3>📋 Reglas Mundial 2026</h3>
+            <div style="max-height: 400px; overflow-y: auto; margin: 15px 0; font-size: 12px; line-height: 1.5;">
+                <p><strong>🏆 MUNDIAL 2026 - POLLA ENTRE AMIGOS</strong></p>
+                <p>• Juego social <strong>exclusivamente entre amigos</strong></p>
+                <p>• Solo mayores de 18 años</p>
+                <p>• Cada apuesta: <strong>$5,000 COP</strong></p>
+                <p>• <strong>90% del pozo</strong> para los ganadores</p>
+                <p>• <strong>10% del pozo</strong> para administración</p>
+                <p>• Recargas voluntarias y manuales</p>
+                <p>• Premios repartidos automáticamente</p>
+                <p>• Si nadie acierta, el pozo se acumula</p>
+                <p style="margin-top: 15px;">🇨🇴 Mundial 2026 - Horario Colombia</p>
+            </div>
+            <button id="btnCerrarTerminos" class="close-btn">✅ Aceptar</button>
+        </div>
     </div>
 
     <div id="panelPrincipal" class="oculto">
@@ -613,44 +666,128 @@
     }
     
     async function registrar() {
-        const nombre = document.getElementById('nombre').value;
-        const whatsapp = document.getElementById('whatsapp').value;
-        const medioPago = document.getElementById('medioPagoRegistro').value;
+        const nombre = document.getElementById('nombre').value.trim();
+        const cedula = document.getElementById('cedula').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const whatsapp = document.getElementById('whatsapp').value.trim();
+        const terminos = document.getElementById('terminos').checked;
         
-        if (!nombre || !whatsapp) {
-            alert('❌ Completa nombre y WhatsApp');
+        const cedulaError = document.getElementById('cedulaError');
+        const emailError = document.getElementById('emailError');
+        const whatsappError = document.getElementById('whatsappError');
+        const btn = document.getElementById('btnRegistrar');
+        const loading = document.getElementById('registroLoading');
+        
+        // Validación nombre
+        if (!nombre) {
+            alert('❌ Por favor ingresa tu nombre completo');
+            document.getElementById('nombre').focus();
             return;
         }
+        
+        // Validación cédula (6-10 dígitos)
+        const cedulaRegex = /^\d{6,10}$/;
+        if (!cedula) {
+            cedulaError.textContent = '❌ Ingresa tu número de cédula';
+            cedulaError.style.display = 'block';
+            document.getElementById('cedula').focus();
+            return;
+        }
+        if (!cedulaRegex.test(cedula)) {
+            cedulaError.textContent = '❌ Cédula inválida (debe tener 6-10 dígitos)';
+            cedulaError.style.display = 'block';
+            document.getElementById('cedula').focus();
+            return;
+        }
+        cedulaError.style.display = 'none';
+        
+        // Validación email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+            emailError.textContent = '❌ Ingresa tu correo electrónico';
+            emailError.style.display = 'block';
+            document.getElementById('email').focus();
+            return;
+        }
+        if (!emailRegex.test(email)) {
+            emailError.textContent = '❌ Correo electrónico inválido';
+            emailError.style.display = 'block';
+            document.getElementById('email').focus();
+            return;
+        }
+        emailError.style.display = 'none';
+        
+        // Validación WhatsApp (10 dígitos, empieza con 3)
+        const whatsappRegex = /^3\d{9}$/;
+        if (!whatsapp) {
+            whatsappError.textContent = '❌ Ingresa tu número de WhatsApp';
+            whatsappError.style.display = 'block';
+            document.getElementById('whatsapp').focus();
+            return;
+        }
+        if (!whatsappRegex.test(whatsapp)) {
+            whatsappError.textContent = '❌ Número inválido. Ejemplo: 3101234567';
+            whatsappError.style.display = 'block';
+            document.getElementById('whatsapp').focus();
+            return;
+        }
+        whatsappError.style.display = 'none';
+        
+        // Validación términos
+        if (!terminos) {
+            alert('❌ Debes aceptar los términos y condiciones');
+            return;
+        }
+        
+        // Mostrar loading
+        btn.style.display = 'none';
+        loading.style.display = 'block';
         
         const usuarioId = Date.now().toString();
         
-        const { error } = await db.from('usuarios').insert({
-            id: usuarioId,
-            nombre: nombre,
-            whatsapp: whatsapp,
-            medio_pago: medioPago,
-            saldo: 0,
-            fecha_registro: new Date()
-        });
-        
-        if (error) {
-            alert('Error: ' + error.message);
-            console.error('Error detallado:', error);
-            return;
+        try {
+            const { error } = await db.from('usuarios').insert({
+                id: usuarioId,
+                nombre: nombre,
+                cedula: cedula,
+                email: email,
+                whatsapp: whatsapp,
+                saldo: 0,
+                fecha_registro: new Date()
+            });
+            
+            if (error) throw error;
+            
+            usuarioActual = { id: usuarioId, nombre: nombre, saldo: 0 };
+            localStorage.setItem('usuario', JSON.stringify(usuarioActual));
+            
+            // Animación de salida
+            const panel = document.getElementById('panelRegistro');
+            panel.style.transition = 'opacity 0.5s';
+            panel.style.opacity = '0';
+            
+            setTimeout(() => {
+                panel.classList.add('oculto');
+                document.getElementById('panelPrincipal').classList.remove('oculto');
+                document.getElementById('panelPrincipal').style.opacity = '0';
+                document.getElementById('panelPrincipal').style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    document.getElementById('panelPrincipal').style.opacity = '1';
+                }, 50);
+            }, 500);
+            
+            actualizarUsuarioCard();
+            await cargarDatosGlobales();
+            await cargarPartidos();
+            await cargarMisApuestas();
+            
+            alert(`✅ ¡Bienvenido ${nombre}!\n💰 Tu saldo: $0\n🎯 Recarga mínimo $5,000 para empezar.`);
+            
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+            btn.style.display = 'block';
+            loading.style.display = 'none';
         }
-        
-        usuarioActual = { id: usuarioId, nombre: nombre, saldo: 0 };
-        localStorage.setItem('usuario', JSON.stringify(usuarioActual));
-        
-        document.getElementById('panelRegistro').classList.add('oculto');
-        document.getElementById('panelPrincipal').classList.remove('oculto');
-        
-        actualizarUsuarioCard();
-        await cargarDatosGlobales();
-        await cargarPartidos();
-        await cargarMisApuestas();
-        
-        alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
     }
     
     // ADMIN
@@ -766,6 +903,7 @@ async function cargarSolicitudesRecarga() {
     
     window.onload = async () => {
         await cargarConfiguracion(); 
+        
         const guardado = localStorage.getItem('usuario');
         if (guardado) {
             usuarioActual = JSON.parse(guardado);
@@ -776,10 +914,39 @@ async function cargarSolicitudesRecarga() {
             await cargarPartidos();
             await cargarMisApuestas();
         }
-                // Eventos botones jornada
-                document.getElementById('btnJornada1').onclick = () => cambiarJornada('Jornada 1');
+        
+        // Eventos botones jornada
+        document.getElementById('btnJornada1').onclick = () => cambiarJornada('Jornada 1');
         document.getElementById('btnJornada2').onclick = () => cambiarJornada('Jornada 2');
         document.getElementById('btnJornada3').onclick = () => cambiarJornada('Jornada 3');
+        
+        // ============ EVENTOS MODAL TÉRMINOS ============
+        const openTerminos = document.getElementById('openTerminos');
+        const modalTerminos = document.getElementById('modalTerminos');
+        const btnCerrarTerminos = document.getElementById('btnCerrarTerminos');
+        
+        if (openTerminos) {
+            openTerminos.onclick = (e) => {
+                e.preventDefault();
+                if (modalTerminos) modalTerminos.style.display = 'flex';
+            };
+        }
+        
+        if (btnCerrarTerminos) {
+            btnCerrarTerminos.onclick = () => {
+                if (modalTerminos) modalTerminos.style.display = 'none';
+            };
+        }
+        
+        // Cerrar modal si se hace clic fuera del contenido
+        if (modalTerminos) {
+            modalTerminos.onclick = (e) => {
+                if (e.target === modalTerminos) {
+                    modalTerminos.style.display = 'none';
+                }
+            };
+        }
+        // ============ FIN EVENTOS TÉRMINOS ============
     };
 </script>
 </body>
