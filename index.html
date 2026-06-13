@@ -412,7 +412,11 @@
         const [year, month, day] = fecha.split('-');
         const [horas, minutos] = hora.split(':');
         const fechaPartido = new Date(year, month-1, day, horas, minutos);
-        return ahora > fechaPartido;
+        
+        // Depuración: ver en consola
+        console.log(`📅 ${fecha} ${hora} | Ahora: ${ahora.toLocaleString()} | Partido: ${fechaPartido.toLocaleString()} | Cerrado: ${ahora >= fechaPartido}`);
+        
+        return ahora >= fechaPartido;
     }
     
     async function cargarDatosGlobales() {
