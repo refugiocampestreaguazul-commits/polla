@@ -282,8 +282,7 @@
         <input type="text" id="nombre" placeholder="Nombre completo" required>
         <input type="tel" id="whatsapp" placeholder="WhatsApp" required>
         <select id="medioPagoRegistro">
-            <option value="nequi">Nequi</option>
-            <option value="daviplata">Daviplata</option>
+            <option value="worldsystems">Worldsystems</option>
             <option value="cuenta">Cuenta Bancolombia</option>
         </select>
         <button id="btnRegistrar">🎯 Registrarse (Saldo $0)</button>
@@ -344,7 +343,10 @@
 <div id="modalPago" class="modal">
     <div class="modal-content">
         <h3>💰 Recargar saldo</h3>
-        <select id="medioPago"><option value="nequi">Nequi</option><option value="cuenta">Bancolombia</option></select>
+        <select id="medioPago">
+            <option value="worldsystems">Worldsystems</option>
+            <option value="cuenta">Bancolombia</option>
+        </select>
         <input type="number" id="montoRecarga" placeholder="Monto mínimo $5,000" min="5000" step="5000">
         <div style="background:#f0f0f0; padding:10px; border-radius:8px; margin:10px 0;"><p id="datosPago"></p><p style="font-size:11px;">* Después de consignar, el admin acreditará tu saldo</p></div>
         <button id="btnSolicitarRecarga">✅ Solicitar recarga</button>
@@ -645,7 +647,13 @@
     
     function mostrarModalPago() {
         const medio = document.getElementById('medioPago').value;
-        document.getElementById('datosPago').innerHTML = medio === 'nequi' ? '🔑 Nequi: 0091030441' : '🏦 Bancolombia: 26269998309';
+        let datos = '';
+        if (medio === 'worldsystems') {
+            datos = '🔑 Worldsystems: 0091030441';
+        } else {
+            datos = '🏦 Bancolombia: Cuenta de ahorros 26269998309';
+        }
+        document.getElementById('datosPago').innerHTML = datos;
         document.getElementById('modalPago').style.display = 'flex';
     }
     
