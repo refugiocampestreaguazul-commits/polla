@@ -364,7 +364,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55bXVwd2Z5cW5qZWJua3hza2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNzM5OTYsImV4cCI6MjA5Njg0OTk5Nn0.TXyMksAdY1XxnbRR5Thx8yLsBcZg7bpahHC9om3VFF4';
     
     const COSTO_APUESTA = 5000;
-    const ADMIN_PASSWORD = 'admin123';
+    
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let usuarioActual = null;
     
@@ -685,8 +685,32 @@ async function cargarSolicitudesRecarga() {
     async function verPozo() { const { data: a } = await db.from('apuestas').select('monto'); alert(`💰 POZO TOTAL: $${(a?.reduce((s,x)=>s+x.monto,0)||0).toLocaleString()}`); }
     async function verUsuarios() { const { data: u } = await db.from('usuarios').select('nombre, saldo, celular').order('saldo', { ascending: false }); alert(u?.map((x,i)=>`${i+1}. ${x.nombre}\n   💰 $${x.saldo.toLocaleString()}\n   📱 ${x.celular}`).join('\n\n') || 'No hay usuarios'); }
     
-    function abrirAdmin() { document.getElementById('modalPassword').style.display = 'flex'; document.getElementById('adminPassword').focus(); }
-    document.getElementById('btnVerificarPass').onclick = async () => { if (document.getElementById('adminPassword').value === ADMIN_PASSWORD) { document.getElementById('modalPassword').style.display = 'none'; document.getElementById('adminPanel').style.display = 'block'; document.getElementById('adminBtn').style.display = 'none'; await cargarSolicitudesRecarga(); } else alert('❌ Contraseña incorrecta'); };
+    async function cargarConfiguracion() {
+        const { data } = await db.from('config').select('admin_password').eq('id', 1).single();
+        if (data) {
+            ADMIN_PASSWORD = data.admin_password;
+            console.log('✅ Configuración cargada');
+        }
+    }
+    
+    function abrirAdmin() {
+        document.getElementById('modalPassword').style.display = 'flex';
+        document.getElementById('adminPassword').focus();
+    }
+    document.getElementById('btnVerificarPass').onclick = async () => { 
+        const pass = document.getElementById('adminPassword').value;
+        if (!ADMIN_PASSWORD) await cargarConfiguracion();
+        
+        if (pass === ADMIN_PASSWORD) { 
+            document.getElementById('modalPassword').style.display = 'none'; 
+            document.getElementById('adminPanel').style.display = 'block'; 
+            document.getElementById('adminBtn').style.display = 'none'; 
+            await cargarSolicitudesRecarga(); 
+        } else { 
+            alert('❌ Contraseña incorrecta'); 
+        }
+        document.getElementById('adminPassword').value = '';
+    };
     document.getElementById('btnCancelarPass').onclick = () => { document.getElementById('modalPassword').style.display = 'none'; document.getElementById('adminPassword').value = ''; };
     document.getElementById('btnCerrarAdmin').onclick = () => { document.getElementById('adminPanel').style.display = 'none'; document.getElementById('adminBtn').style.display = 'flex'; };
     document.getElementById('btnActualizarRecargas').onclick = cargarSolicitudesRecarga;
@@ -699,6 +723,7 @@ async function cargarSolicitudesRecarga() {
     document.getElementById('adminBtn').onclick = abrirAdmin;
     
     window.onload = async () => {
+        await cargarConfiguracion();  // <--- AGREGAR ESTA LÍNEA
         const guardado = localStorage.getItem('usuario');
         if (guardado) {
             usuarioActual = JSON.parse(guardado);
