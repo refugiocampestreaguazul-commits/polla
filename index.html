@@ -877,38 +877,16 @@ async function cargarSolicitudesRecarga() {
     document.getElementById('listaRecargas').innerHTML = html;
 }
     
-window.aprobarRecarga = async function(idRecarga, idUsuario, monto) {
-        const confirmar = confirm(`✅ ¿Aprobar recarga de $${monto.toLocaleString()}?`);
-        if (!confirmar) return;
-        
-        // Obtener saldo actual
-        const { data: usuario } = await db.from('usuarios').select('saldo').eq('id', idUsuario).single();
-        const nuevoSaldo = (usuario?.saldo || 0) + monto;
-        
-        // Actualizar saldo
-        await db.from('usuarios').update({ saldo: nuevoSaldo }).eq('id', idUsuario);
-        
-        // Marcar recarga como confirmada
-        await db.from('recargas').update({ estado: 'confirmado' }).eq('id', idRecarga);
-        
-        alert(`✅ Recarga aprobada!\n💰 Se añadieron $${monto.toLocaleString()}`);
-        
-        // Actualizar UI si es el usuario actual
-        if (usuarioActual && usuarioActual.id === idUsuario) {
-            usuarioActual.saldo = nuevoSaldo;
-            actualizarUsuarioCard();
-            await cargarDatosGlobales();
-            await cargarMisApuestas();
-        }
-        
-        // Notificar al usuario (opcional)
-        const { data: userData } = await db.from('usuarios').select('whatsapp, nombre').eq('id', idUsuario).single();
-        if (userData && userData.whatsapp) {
-            const mensaje = `🎉 *RECARGA APROBADA* 🎉\n\nHola *${userData.nombre}*, tu recarga de *$${monto.toLocaleString()} COP* ha sido aprobada.\n\n💰 Nuevo saldo: *$${nuevoSaldo.toLocaleString()} COP*\n\n🏆 ¡Ya puedes apostar!`;
-            const link = `https://wa.me/${userData.whatsapp}?text=${encodeURIComponent(mensaje)}`;
-            const enviar = confirm(`📱 ¿Enviar notificación al usuario por WhatsApp?`);
-            if (enviar) window.open(link, '_blank');
-        }
+    window.aprobarRecarga = async function(id, idUser, monto) {
+        if (!confirm(`¿Aprobar recarga de $${monto.toLocaleString()}?`)) return;
+        const { data: user } = await db.from('usuarios').select('saldo').eq('id', idUser).single();
+        await db.from('usuarios').update({ saldo: (user?.saldo || 0) + monto }).eq('id', idUser);
+        await db.from('recargas').update({ estado: 'confirmado' }).eq('id', id);
+        alert('✅ Recarga aprobada');
+        document.getElementById(`sol_${id}`)?.remove();
+        cargarSolicitudesRecarga();
+        if (usuarioActual && usuarioActual.id === idUser) { usuarioActual.saldo += monto; actualizarUsuarioCard(); }
+        await cargarDatosGlobales();
     };
     
     window.rechazarRecarga = async function(id) {
@@ -934,77 +912,9 @@ window.aprobarRecarga = async function(idRecarga, idUsuario, monto) {
     async function solicitarRecarga() {
         const monto = parseInt(document.getElementById('montoRecarga').value);
         const medio = document.getElementById('medioPago').value;
-        
-        // Validaciones
-        if (!monto || isNaN(monto)) {
-            alert('❌ Ingresa un monto válido');
-            document.getElementById('montoRecarga').focus();
-            return;
-        }
-        
-        if (monto < 5000) {
-            alert('❌ El monto mínimo de recarga es $5,000');
-            document.getElementById('montoRecarga').focus();
-            return;
-        }
-        
-        if (monto % 5000 !== 0) {
-            alert('❌ El monto debe ser múltiplo de $5,000');
-            document.getElementById('montoRecarga').focus();
-            return;
-        }
-        
-        // Confirmar recarga
-        const confirmar = confirm(`💰 Confirmar recarga de $${monto.toLocaleString()} por ${medio}?\n\n¿Los datos son correctos?`);
-        if (!confirmar) return;
-        
-        const recargaId = Date.now().toString();
-        
-        // Guardar recarga
-        await db.from('recargas').insert({
-            id: recargaId,
-            usuario_id: usuarioActual.id,
-            monto: monto,
-            medio_pago: medio,
-            estado: 'verificando',
-            fecha: new Date()
-        });
-        
-        alert(`✅ Solicitud de recarga enviada.\n\n💰 Monto: $${monto.toLocaleString()}\n🆔 ID: ${recargaId}\n\n⏳ El administrador verificará y acreditará tu saldo.`);
-        
-        // Mostrar instrucciones de pago
-        const verInstrucciones = confirm(`📝 ¿Ver los datos para consignar por ${medio}?`);
-        if (verInstrucciones) {
-            let datosPago = '';
-            switch(medio) {
-                case 'bancolombia':
-                    datosPago = '🏦 *Bancolombia*\nCuenta de ahorros: *26269998309*';
-                    break;
-                case 'worldsystems':
-                    datosPago = '💳 *Worldsystems*\nCuenta: *0091030441*';
-                    break;
-                case 'nequi':
-                    datosPago = '📱 *Nequi*\nLlave: *0091030441*';
-                    break;
-                case 'daviplata':
-                    datosPago = '📱 *Daviplata*\nNúmero: *3001234567*';
-                    break;
-                default:
-                    datosPago = 'Contacta al administrador';
-            }
-            alert(`📋 *DATOS PARA CONSIGNAR*\n\n${datosPago}`);
-        }
-        
-        // Notificar al admin por WhatsApp
-        const enviarNotif = confirm(`📱 ¿Enviar notificación al administrador por WhatsApp?`);
-        if (enviarNotif && ADMIN_WHATSAPP) {
-            const { data: usuario } = await db.from('usuarios').select('whatsapp, nombre').eq('id', usuarioActual.id).single();
-            const mensajeAdmin = `🔔 *NUEVA RECARGA* 🔔\n\n👤 Usuario: ${usuario?.nombre || usuarioActual.nombre}\n📱 WhatsApp: ${usuario?.whatsapp || 'No registrado'}\n💰 Monto: $${monto.toLocaleString()}\n💳 Método: ${medio}\n🆔 ID: ${recargaId}`;
-            
-            const adminLink = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(mensajeAdmin)}`;
-            window.open(adminLink, '_blank');
-        }
-        
+        if (!monto || monto < 5000 || monto % 5000 !== 0) { alert('Monto mínimo $5,000 y múltiplo de 5,000'); return; }
+        await db.from('recargas').insert({ id: Date.now().toString(), usuario_id: usuarioActual.id, monto, medio_pago: medio, estado: 'verificando', fecha: new Date() });
+        alert('✅ Solicitud enviada. El admin acreditará tu saldo.');
         cerrarModal();
     }
     
@@ -1012,20 +922,13 @@ window.aprobarRecarga = async function(idRecarga, idUsuario, monto) {
     async function verPozo() { const { data: a } = await db.from('apuestas').select('monto'); alert(`💰 POZO TOTAL: $${(a?.reduce((s,x)=>s+x.monto,0)||0).toLocaleString()}`); }
     async function verUsuarios() { const { data: u } = await db.from('usuarios').select('nombre, saldo, celular').order('saldo', { ascending: false }); alert(u?.map((x,i)=>`${i+1}. ${x.nombre}\n   💰 $${x.saldo.toLocaleString()}\n   📱 ${x.celular}`).join('\n\n') || 'No hay usuarios'); }
     let ADMIN_PASSWORD = '';
-    let ADMIN_WHATSAPP = '';
+
     
     async function cargarConfiguracion() {
-        try {
-            const { data, error } = await db.from('config').select('admin_password, admin_whatsapp').eq('id', 1).single();
-            if (error) throw error;
-            if (data) {
-                ADMIN_PASSWORD = data.admin_password;
-                ADMIN_WHATSAPP = data.admin_whatsapp || '573103415830';
-                console.log('✅ Configuración cargada');
-            }
-        } catch (e) {
-            console.error('Error cargando configuración:', e);
-            
+        const { data } = await db.from('config').select('admin_password').eq('id', 1).single();
+        if (data) {
+            ADMIN_PASSWORD = data.admin_password;
+            console.log('✅ Configuración cargada');
         }
     }
     
