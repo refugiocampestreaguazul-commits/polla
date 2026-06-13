@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
     <style>
-        <!-- Metadatos para compartir en redes sociales -->
+        <!-- Metadatos para compartir en redes sociales-->
 <meta property="og:title" content="🏆 Mundial 2026 - Apuestas entre amigos" />
 <meta property="og:description" content="Apuesta el marcador exacto de los partidos del Mundial 2026. 🇨🇴" />
 <meta property="og:image" content="https://polla-seven.vercel.app/mundial-preview.jpg" />
@@ -612,18 +612,33 @@
     }
     
     // ADMIN
-    async function cargarSolicitudesRecarga() {
-        const container = document.getElementById('listaRecargas');
-        container.innerHTML = '<p style="text-align:center;">🔄 Cargando...</p>';
-        const { data: solicitudes } = await db.from('recargas').select('*').eq('estado', 'verificando').order('fecha', { ascending: false });
-        if (!solicitudes || solicitudes.length === 0) { container.innerHTML = '<p style="text-align:center;">✅ No hay solicitudes pendientes</p>'; return; }
-        let html = '';
-        for (const sol of solicitudes) {
-            const { data: user } = await db.from('usuarios').select('nombre').eq('id', sol.usuario_id).single();
-            html += `<div class="solicitud-item" id="sol_${sol.id}"><div><strong>👤 ${user?.nombre || 'Desconocido'}</strong></div><div>💰 $${sol.monto.toLocaleString()}</div><div>📱 ${sol.medio_pago}</div><button class="btn-aprobar" onclick="aprobarRecarga('${sol.id}', '${sol.usuario_id}', ${sol.monto})">✅ APROBAR</button><button class="btn-rechazar" onclick="rechazarRecarga('${sol.id}')">❌ RECHAZAR</button></div>`;
-        }
-        container.innerHTML = html;
+    // En el panel admin, mostrar recargas con botón "Verificar y aprobar"
+async function cargarSolicitudesRecarga() {
+    const { data: solicitudes } = await db.from('recargas').select('*').eq('estado', 'verificando').order('fecha', { ascending: false });
+    
+    if (!solicitudes || solicitudes.length === 0) {
+        document.getElementById('listaRecargas').innerHTML = '<p>✅ No hay solicitudes</p>';
+        return;
     }
+    
+    let html = '';
+    for (const sol of solicitudes) {
+        const { data: user } = await db.from('usuarios').select('nombre').eq('id', sol.usuario_id).single();
+        html += `
+            <div class="solicitud-item">
+                <div><strong>👤 ${user?.nombre}</strong></div>
+                <div>💰 $${sol.monto.toLocaleString()}</div>
+                <div>📱 ${sol.medio_pago}</div>
+                <div>📅 ${new Date(sol.fecha).toLocaleTimeString()}</div>
+                <div style="display:flex; gap:5px; margin-top:8px;">
+                    <button class="btn-aprobar" onclick="aprobarRecarga('${sol.id}', '${sol.usuario_id}', ${sol.monto})">✅ Verificar y aprobar</button>
+                    <button class="btn-rechazar" onclick="rechazarRecarga('${sol.id}')">❌ Rechazar</button>
+                </div>
+            </div>
+        `;
+    }
+    document.getElementById('listaRecargas').innerHTML = html;
+}
     
     window.aprobarRecarga = async function(id, idUser, monto) {
         if (!confirm(`¿Aprobar recarga de $${monto.toLocaleString()}?`)) return;
