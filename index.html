@@ -373,11 +373,27 @@
         <button id="btnCerrarModal" class="close-btn">❌ Cancelar</button>
     </div>
 </div>
-<div style="text-align: center; margin: 30px 0 15px 0;">
+<div style="text-align: center; margin: 30px 0 15px 0;         @keyframes pulso {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.logo-animado {
+    animation: pulso 1.5s ease-in-out infinite;
+    transition: transform 0.3s, filter 0.3s;
+    cursor: pointer;
+}
+
+.logo-animado:hover {
+    transform: scale(1.08);
+    filter: brightness(1.1);
+}">
+    
     <a href="https://worldsystems.catalog.to/" target="_blank" rel="noopener noreferrer">
-        <img src="logo.png" alt="Publicidad" style="max-height: 70px; width: auto; cursor: pointer;">
+        <img src="logo.png" alt="Publicidad" class="logo-animado" style="max-height: 70px; width: auto;">
+        
     </a>
-</div>
 <div class="footer">
     <p><strong>⚖️ Ley 1581/2012 - Protección de datos </strong> | Juego social entre amigos. Prohibida la participación a menores de 18 años. Juega responsablemente.</p>
     <p style="margin-top:8px;">© 2026 Mundial - Todos los derechos reservados</p>
