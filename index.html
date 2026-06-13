@@ -684,7 +684,7 @@ async function cargarSolicitudesRecarga() {
     function cerrarModal() { document.getElementById('modalPago').style.display = 'none'; }
     async function verPozo() { const { data: a } = await db.from('apuestas').select('monto'); alert(`💰 POZO TOTAL: $${(a?.reduce((s,x)=>s+x.monto,0)||0).toLocaleString()}`); }
     async function verUsuarios() { const { data: u } = await db.from('usuarios').select('nombre, saldo, celular').order('saldo', { ascending: false }); alert(u?.map((x,i)=>`${i+1}. ${x.nombre}\n   💰 $${x.saldo.toLocaleString()}\n   📱 ${x.celular}`).join('\n\n') || 'No hay usuarios'); }
-    
+    let ADMIN_PASSWORD = '';
     async function cargarConfiguracion() {
         const { data } = await db.from('config').select('admin_password').eq('id', 1).single();
         if (data) {
