@@ -552,19 +552,43 @@
     }
     
     async function registrar() {
-        const nombre = document.getElementById('nombre').value, celular = document.getElementById('celular').value, email = document.getElementById('email').value, medioPago = document.getElementById('medioPagoRegistro').value;
-        if (!nombre || !celular) { alert('❌ Completa nombre y celular'); return; }
+        const nombre = document.getElementById('nombre').value;
+        const whatsapp = document.getElementById('whatsapp').value;
+        const medioPago = document.getElementById('medioPagoRegistro').value;
+        
+        if (!nombre || !whatsapp) {
+            alert('❌ Completa nombre y WhatsApp');
+            return;
+        }
+        
         const usuarioId = Date.now().toString();
-        const { error } = await db.from('usuarios').insert({ id: usuarioId, nombre, email, celular, medio_pago: medioPago, saldo: 0, fecha_registro: new Date() });
-        if (error) { alert('Error: ' + error.message); return; }
-        usuarioActual = { id: usuarioId, nombre, saldo: 0 };
+        
+        const { error } = await db.from('usuarios').insert({
+            id: usuarioId,
+            nombre: nombre,
+            whatsapp: whatsapp,
+            medio_pago: medioPago,
+            saldo: 0,
+            fecha_registro: new Date()
+        });
+        
+        if (error) {
+            alert('Error: ' + error.message);
+            console.error('Error detallado:', error);
+            return;
+        }
+        
+        usuarioActual = { id: usuarioId, nombre: nombre, saldo: 0 };
         localStorage.setItem('usuario', JSON.stringify(usuarioActual));
+        
         document.getElementById('panelRegistro').classList.add('oculto');
         document.getElementById('panelPrincipal').classList.remove('oculto');
+        
         actualizarUsuarioCard();
         await cargarDatosGlobales();
         await cargarPartidos();
         await cargarMisApuestas();
+        
         alert(`✅ ¡Bienvenido ${nombre}! Recarga mínimo $5,000 para apostar.`);
     }
     
