@@ -683,10 +683,10 @@ async function cargarSolicitudesRecarga() {
     function mostrarModalPago() {
         const medio = document.getElementById('medioPago').value;
         let datos = '';
-        if (medio === 'WorldSystems') {
-            datos = '🔑 Worldsystems: 0091030441';
+        if (medio === 'worldsystems') {
+            datos = '🔑 worldsystems: 0091030441';
         } else {
-            datos = '🏦 Bancolombia: Cta de ahorros # 26269998309';
+            datos = '🏦 Bancolombia: Cta de ahorros # 26269998309 y 🔑 WorldSystems: 0091030441';
         }
         document.getElementById('datosPago').innerHTML = datos;
         document.getElementById('modalPago').style.display = 'flex';
