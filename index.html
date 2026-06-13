@@ -292,7 +292,7 @@
 <div class="container">
     <div class="header">
         <h1>🏆 MUNDIAL 2026 🏆</h1>
-        <p>¡Acierta el marcador exacto y gana! | 🇨🇴 Horario Colombia (UTC-5)</p>
+        <p>¡Acierta el marcador y gana! | 🇨🇴 Horario Colombia (UTC-5)</p>
         <small>⚠️ Cada apuesta: $5,000 | Pozo acumulativo</small>
         <div id="usuarioCard" class="usuario-card" style="display:none;"></div>
     </div>
@@ -364,8 +364,8 @@
     <div class="modal-content">
         <h3>🏆 Mundial 2026 - Recargar 💰</h3>
         <select id="medioPago">
-            <option value="worldsystems">Worldsystems</option>
-            <option value="cuenta">Bancolombia</option>
+            <option value="worldsystems">WorldSystems</option>
+            <option value="cuenta"># Cta Ahorros Bancolombia</option>
         </select>
         <input type="number" id="montoRecarga" placeholder="Monto mínimo $5,000" min="5000" step="5000">
         <div style="background:#f0f0f0; padding:10px; border-radius:8px; margin:10px 0;"><p id="datosPago"></p><p style="font-size:11px;">* Después de consignar, el admin acreditará tu saldo</p></div>
@@ -683,10 +683,10 @@ async function cargarSolicitudesRecarga() {
     function mostrarModalPago() {
         const medio = document.getElementById('medioPago').value;
         let datos = '';
-        if (medio === 'worldsystems') {
+        if (medio === 'WorldSystems') {
             datos = '🔑 Worldsystems: 0091030441';
         } else {
-            datos = '🏦 Bancolombia: Cuenta de ahorros 26269998309';
+            datos = '🏦 Bancolombia: Cta de ahorros # 26269998309';
         }
         document.getElementById('datosPago').innerHTML = datos;
         document.getElementById('modalPago').style.display = 'flex';
@@ -743,7 +743,7 @@ async function cargarSolicitudesRecarga() {
     document.getElementById('adminBtn').onclick = abrirAdmin;
     
     window.onload = async () => {
-        await cargarConfiguracion();  // <--- AGREGAR ESTA LÍNEA
+        await cargarConfiguracion(); 
         const guardado = localStorage.getItem('usuario');
         if (guardado) {
             usuarioActual = JSON.parse(guardado);
