@@ -286,7 +286,15 @@
             <button id="btnRecargar" style="background:#ffd700; color:#1a472a; width:auto; padding:8px 20px;">➕ Recargar saldo (mín $5,000)</button>
         </div>
         <div class="card"><h2>🏆 RANKING DE GANADORES</h2><div id="ranking">Cargando...</div></div>
-        <div class="card"><h2>⚽ CALENDARIO OFICIAL FIFA 2026</h2><div class="partidos-grid" id="partidosGrid"></div></div>
+        <div class="card">
+            <h2>⚽ CALENDARIO OFICIAL FIFA 2026</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                <button id="btnJornada1" style="background: #ffd700; color: #1a472a; width: auto; padding: 10px 20px;">📅 Jornada 1</button>
+                <button id="btnJornada2" style="background: #1a472a; color: #ffd700; width: auto; padding: 10px 20px;">📅 Jornada 2</button>
+                <button id="btnJornada3" style="background: #1a472a; color: #ffd700; width: auto; padding: 10px 20px;">📅 Jornada 3</button>
+            </div>
+            <div class="partidos-grid" id="partidosGrid"></div>
+        </div>
         <div class="card"><h2>📋 MIS APUESTAS</h2><div id="misApuestas"></div></div>
     </div>
 </div>
@@ -424,6 +432,8 @@
         } catch(e) { console.error(e); }
     }
     
+    let jornadaActual = 'Jornada 1';
+    
     async function cargarPartidos() {
         try {
             const { data: partidos, error } = await db.from('partidos').select('*').order('fecha', { ascending: true }).order('hora', { ascending: true });
@@ -434,41 +444,65 @@
                 return;
             }
             
-            // Agrupar por jornada
-            const porJornada = {};
-            partidos.forEach(p => {
-                const j = p.grupo;
-                if (!porJornada[j]) porJornada[j] = [];
-                porJornada[j].push(p);
-            });
-            
+            const partidosFiltrados = partidos.filter(p => p.grupo === jornadaActual);
             const grid = document.getElementById('partidosGrid');
-            grid.innerHTML = Object.keys(porJornada).sort().map(jornada => `
-                <div style="margin-bottom: 30px;">
-                    <h3 style="background: #1a472a; color: #ffd700; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px;">📅 ${jornada}</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
-                        ${porJornada[jornada].map(p => {
-                            const cerrado = p.estado === 'cerrado' || partidoCerrado(p.fecha, p.hora);
-                            const esCol = p.local === 'Colombia' || p.visitante === 'Colombia';
-                            return `
-                                <div class="partido-card ${cerrado ? 'cerrado' : ''}">
-                                    <div><strong>🏆 ${p.local} vs ${p.visitante}</strong>${esCol ? '<span style="background:#ffd700;color:#1a472a;padding:2px 8px;border-radius:12px;font-size:10px;margin-left:8px;">🇨🇴 COLOMBIA</span>' : ''}</div>
-                                    <div class="fecha-hora">📅 ${p.fecha} | 🕐 ${p.hora}<span class="estado-partido ${cerrado ? 'estado-cerrado' : 'estado-abierto'}">${cerrado ? '🔒 Cerrado' : '📢 Abierto'}</span></div>
-                                    ${p.resultado_local !== undefined ? `<div style="margin:8px 0; background:#e0e0e0; padding:5px; border-radius:5px;">📊 Resultado: ${p.resultado_local} - ${p.resultado_visitante}</div>` : ''}
-                                    <div class="marcador-inputs">
-                                        <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
-                                        <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
-                                    </div>
-                                    ${!cerrado ? `<button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>` : `<button disabled style="background:#ccc;">⏳ Partido finalizado</button>`}
-                                </div>
-                            `;
-                        }).join('')}
+            
+            grid.innerHTML = partidosFiltrados.map(p => {
+                const cerrado = p.estado === 'cerrado' || partidoCerrado(p.fecha, p.hora);
+                const esColombia = (p.local === 'Colombia' || p.visitante === 'Colombia');
+                return `
+                    <div class="partido-card ${cerrado ? 'cerrado' : ''}">
+                        <div>
+                            <strong>🏆 ${p.local} vs ${p.visitante}</strong>
+                            ${esColombia ? '<span style="background:#ffd700;color:#1a472a;padding:2px 8px;border-radius:12px;font-size:10px;margin-left:8px;">🇨🇴 COLOMBIA</span>' : ''}
+                        </div>
+                        <div class="fecha-hora">
+                            📅 ${p.fecha} | 🕐 ${p.hora}
+                            <span class="estado-partido ${cerrado ? 'estado-cerrado' : 'estado-abierto'}">
+                                ${cerrado ? '🔒 Cerrado' : '📢 Abierto'}
+                            </span>
+                        </div>
+                        ${p.resultado_local !== undefined ? `<div style="margin:8px 0; background:#e0e0e0; padding:5px; border-radius:5px;">📊 Resultado: ${p.resultado_local} - ${p.resultado_visitante}</div>` : ''}
+                        <div class="marcador-inputs">
+                            <input type="number" id="golL_${p.id}" placeholder="${p.local}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
+                            <input type="number" id="golV_${p.id}" placeholder="${p.visitante}" min="0" max="10" style="width:45%; text-align:center;" ${cerrado ? 'disabled' : ''}>
+                        </div>
+                        ${!cerrado ? `<button onclick="apostar(${p.id}, '${p.local}', '${p.visitante}')">⚡ Apostar $${COSTO_APUESTA.toLocaleString()}</button>` : `<button disabled style="background:#ccc;">⏳ Partido finalizado</button>`}
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            
+            if (partidosFiltrados.length === 0) {
+                grid.innerHTML = '<p>⚠️ No hay partidos para esta jornada</p>';
+            }
         } catch(e) { 
             console.error('Error:', e);
-            document.getElementById('partidosGrid').innerHTML = '<p>❌ Error al cargar los partidos</p>';
+            document.getElementById('partidosGrid').innerHTML = '<p>❌ Error al cargar</p>';
+        }
+    }
+    
+    function cambiarJornada(jornada) {
+        jornadaActual = jornada;
+        cargarPartidos();
+        
+        document.getElementById('btnJornada1').style.background = '#1a472a';
+        document.getElementById('btnJornada1').style.color = '#ffd700';
+        document.getElementById('btnJornada2').style.background = '#1a472a';
+        document.getElementById('btnJornada2').style.color = '#ffd700';
+        document.getElementById('btnJornada3').style.background = '#1a472a';
+        document.getElementById('btnJornada3').style.color = '#ffd700';
+        
+        if (jornada === 'Jornada 1') {
+            document.getElementById('btnJornada1').style.background = '#ffd700';
+            document.getElementById('btnJornada1').style.color = '#1a472a';
+        }
+        if (jornada === 'Jornada 2') {
+            document.getElementById('btnJornada2').style.background = '#ffd700';
+            document.getElementById('btnJornada2').style.color = '#1a472a';
+        }
+        if (jornada === 'Jornada 3') {
+            document.getElementById('btnJornada3').style.background = '#ffd700';
+            document.getElementById('btnJornada3').style.color = '#1a472a';
         }
     }
     
@@ -604,6 +638,10 @@
             await cargarPartidos();
             await cargarMisApuestas();
         }
+                // Eventos botones jornada
+                document.getElementById('btnJornada1').onclick = () => cambiarJornada('Jornada 1');
+        document.getElementById('btnJornada2').onclick = () => cambiarJornada('Jornada 2');
+        document.getElementById('btnJornada3').onclick = () => cambiarJornada('Jornada 3');
     };
 </script>
 </body>
