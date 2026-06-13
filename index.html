@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>🏆 Mundial 2026 - Pozo Acumulativo</title>
+    <title>🏆 Mundial 2026 - Apuestas entre amigos</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
     <style>
@@ -286,6 +286,23 @@
             .header { padding-top: 80px; }
             .ganador-alert { font-size: 18px; padding: 15px 30px; width: 90%; }
         }
+        @keyframes pulsoLogo {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        
+        .logo-efecto {
+            animation: pulsoLogo 1.2s ease-in-out infinite;
+            display: inline-block;
+        }
+        
+        .logo-efecto:hover {
+            animation: none;
+            transform: scale(1.1);
+            filter: brightness(1.1);
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -373,22 +390,7 @@
         <button id="btnCerrarModal" class="close-btn">❌ Cancelar</button>
     </div>
 </div>
-<div style="text-align: center; margin: 30px 0 15px 0;         @keyframes pulso {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.logo-animado {
-    animation: pulso 1.5s ease-in-out infinite;
-    transition: transform 0.3s, filter 0.3s;
-    cursor: pointer;
-}
-
-.logo-animado:hover {
-    transform: scale(1.08);
-    filter: brightness(1.1);
-}">
+<div style="text-align: center; margin: 30px 0 15px 0; ">
     
     <a href="https://worldsystems.catalog.to/" target="_blank" rel="noopener noreferrer">
         <img src="logo.png" alt="Publicidad" class="logo-animado" style="max-height: 70px; width: auto;">
